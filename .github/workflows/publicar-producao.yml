@@ -24,6 +24,7 @@ jobs:
           grep -q 'modoTeste: false' site/config.js
           sed -i '/<div class="demo-alert">/d' site/index.html
           sed -i 's|<span class="footer-note">Ambiente de testes • Textos institucionais em revisão. Mensagens de pedido serão identificadas como teste.</span>||' site/index.html
+          sed -i 's|<div class="hero-stamp" aria-hidden="true"><span>SEU</span><strong>estilo</strong><span>EM PRIMEIRO LUGAR</span></div>||' site/index.html
           sed -i 's|<p class="small-note"><strong>Modo de testes:</strong> a mensagem ao WhatsApp será identificada como TESTE e não deve ser tratada como pedido real.</p>||' site/index.html
 
 
