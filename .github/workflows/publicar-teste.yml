@@ -26,4 +26,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: versions upload --name lumewoman --assets=./site --compatibility-date 2026-11-01
+          command: versions upload --name lumewoman --assets=./site --compatibility-date 2026-11-01 --preview-alias teste
