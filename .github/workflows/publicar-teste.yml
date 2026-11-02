@@ -14,9 +14,16 @@ jobs:
       - name: Obter arquivos
         uses: actions/checkout@v4
 
-      - name: Enviar versão sem publicar
+      - name: Separar arquivos publicos da loja
+        run: |
+          mkdir -p site
+          cp _headers app.js catalogo-supabase.js config.js entregas-publico.js index.html marca.css styles.css tema-publico.js site/
+          cp -R admin assets politicas site/
+          find site -type f -name .gitkeep -delete
+
+      - name: Enviar versao sem publicar
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: versions upload --name lumewoman --assets=./ --compatibility-date 2026-11-01
+          command: versions upload --name lumewoman --assets=./site --compatibility-date 2026-11-01
