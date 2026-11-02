@@ -1,6 +1,6 @@
 README.md
 wrangler.jsonc
-_headers
-.gitkeep
 .assetsignore
+.gitkeep
 .git/
+.github/
