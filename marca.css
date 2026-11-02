@@ -1,0 +1,24 @@
+/* Lume Woman V10.2 — identidade visual escrita uniforme. */
+:root { --lume-script-font: 'Allura', 'Segoe Script', 'Brush Script MT', cursive; }
+.lume-wordmark { display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;min-width:100px;white-space:nowrap;color:inherit;vertical-align:middle; }
+.lume-wordmark-script {font:normal 42px/.95 var(--lume-script-font);font-variant:normal;letter-spacing:0;position:relative;text-transform:none;}
+.lume-wordmark-star {font-family:Georgia,serif;font-size:10px;position:absolute;top:0;right:-11px;color:#be9987;}
+.lume-wordmark-sub {display:block;font:600 9px/1.3 Arial,Helvetica,sans-serif;letter-spacing:.44em;margin-top:2px;padding-left:.42em;text-transform:uppercase;}
+.lume-wordmark--footer {color:#f4e8dc;align-items:center;min-width:124px;max-width:165px;}
+.lume-wordmark--footer .lume-wordmark-script {font-size:47px;}
+.lume-wordmark--footer .lume-wordmark-sub {font-size:9px;}
+.lume-brand-mention {display:inline-flex;align-items:baseline;gap:.10em;color:inherit;white-space:nowrap;vertical-align:baseline;font-weight:normal;text-transform:none;letter-spacing:0;}
+.lume-brand-script {font-family:var(--lume-script-font);font-size:1.65em;font-style:normal;font-weight:400;line-height:.75;text-transform:none;letter-spacing:0;}
+.lume-brand-suffix {font-family:Arial,Helvetica,sans-serif;font-size:.64em;font-weight:650;letter-spacing:.16em;line-height:1;text-transform:uppercase;}
+/* Nunca desenhar a marca substituta antes da consulta ao Supabase. */
+[data-theme-logo-fallback] {visibility:hidden;}
+html.lume-logo-settled [data-theme-logo-fallback] {visibility:visible;}
+[data-theme-logo-fallback][hidden], [data-theme-logo][hidden] {display:none!important;}
+.logo [data-theme-logo-fallback] {display:flex;align-items:center;justify-content:center;}
+.policy-logo {max-width:166px;max-height:58px;width:auto;height:auto;object-fit:contain;}
+.brand .lume-wordmark-script {font-size:43px;}
+.brand .lume-wordmark-sub {font-size:8px;}
+.footer-brand .lume-wordmark {align-self:flex-start;}
+.brand-section .lume-brand-mention {font-size:15px;}
+.foot .lume-brand-mention, .footer-institutional .lume-brand-mention {font-size:12px;}
+@media(max-width:700px){.lume-wordmark-script{font-size:38px}.brand .lume-wordmark-script{font-size:38px}.lume-wordmark--footer .lume-wordmark-script{font-size:44px}}
