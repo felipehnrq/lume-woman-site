@@ -1,0 +1,22 @@
+
+name: Preparar versão de teste
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter arquivos
+        uses: actions/checkout@v4
+
+      - name: Enviar versão sem publicar
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: versions upload
