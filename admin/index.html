@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#f7f2ec"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <meta name="referrer" content="no-referrer"/>
+  <title>Painel | Lume Woman</title>
+  <link rel="stylesheet" href="admin.css"/>
+  <link rel="stylesheet" href="../marca.css"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&amp;display=swap" media="print" onload="this.media='all'"/>
+</head>
+<body>
+
+  <!-- 1) Tela de carregamento (aparece por um instante ao abrir) -->
+  <div id="view-boot" class="boot" role="status">
+    <span class="boot-star" aria-hidden="true">✳</span>
+    <p>Carregando…</p>
+  </div>
+
+  <!-- 2) Tela de login -->
+  <main id="view-login" class="login" hidden>
+    <div class="login-card">
+      <div class="logo" aria-label="Lume Woman">
+        <span data-theme-logo-fallback><span class="lume-wordmark" aria-hidden="true"><span class="lume-wordmark-script">Lume<span class="lume-wordmark-star">✳</span></span><span class="lume-wordmark-sub">WOMAN</span></span></span>
+      </div>
+      <p class="eyebrow"><span class="eyebrow-line"></span> PAINEL DA LOJA</p>
+      <h1>Bem-vinda de volta.</h1>
+      <p class="login-intro">Entre com seu e-mail e senha para cuidar da sua coleção.</p>
+
+      <form id="login-form" novalidate>
+        <label for="email">E-mail</label>
+        <input id="email" name="email" type="email" inputmode="email"
+               autocomplete="username" autocapitalize="none" autocorrect="off"
+               spellcheck="false" required/>
+
+        <label for="password">Senha</label>
+        <div class="password-row">
+          <input id="password" name="password" type="password"
+                 autocomplete="current-password" required/>
+          <button type="button" id="toggle-password" class="ghost-btn"
+                  aria-controls="password" aria-pressed="false">Mostrar</button>
+        </div>
+
+        <p id="login-message" class="message" role="alert" aria-live="assertive"></p>
+
+        <button type="submit" id="login-submit" class="btn-primary">Entrar <span aria-hidden="true">→</span></button>
+      </form>
+
+      <a class="back-link" href="../">← Voltar para a loja</a>
+    </div>
+  </main>
+
+  <!-- 3) Painel (só aparece depois de confirmar que é administradora) -->
+  <div id="view-panel" hidden>
+    <header class="panel-header">
+      <div class="panel-header-inner">
+        <a href="#" class="logo" aria-label="Lume Woman, início do painel">
+          <span data-theme-logo-fallback><span class="lume-wordmark" aria-hidden="true"><span class="lume-wordmark-script">Lume<span class="lume-wordmark-star">✳</span></span><span class="lume-wordmark-sub">WOMAN</span></span></span>
+        </a>
+        <div class="panel-user">
+          <span id="user-email" class="user-email"></span>
+          <a class="text-link" href="../" target="_blank" rel="noopener">Ver loja ↗</a>
+          <button type="button" id="logout" class="btn-outline">Sair</button>
+        </div>
+      </div>
+    </header>
+    <p id="panel-alert" class="panel-alert" role="alert" hidden></p>
+
+    <nav class="panel-nav" aria-label="Navegação do painel">
+      <a href="#" data-nav="inicio"><span aria-hidden="true">✳</span> Início</a>
+      <a href="#produtos" data-nav="produtos"><span aria-hidden="true">♡</span> Produtos</a>
+      <a href="#estoque" data-nav="estoque"><span aria-hidden="true">✧</span> Estoque</a>
+      <a href="#fotografias" data-nav="fotografias"><span aria-hidden="true">◇</span> Fotografias</a>
+      <a href="#personalizar" data-nav="personalizar"><span aria-hidden="true">◈</span> Personalizar</a>
+      <a href="#entregas" data-nav="entregas"><span aria-hidden="true">⌁</span> Entregas</a>
+    </nav>
+
+    <main class="panel-main">
+      <section id="tela-inicio" data-screen="inicio">
+        <p class="eyebrow"><span class="eyebrow-line"></span> PAINEL DA LOJA</p>
+        <h2 id="greeting">Olá!</h2>
+        <p class="lead">O que você quer cuidar hoje?</p>
+        <div class="cards">
+          <a class="card" href="#produtos">
+            <span class="card-icon" aria-hidden="true">♡</span>
+            <h3>Produtos</h3>
+            <p>Cadastrar peças, alterar nomes, preços, descrições, tamanhos e quantidades, publicar ou desativar.</p>
+            <span class="card-tag card-tag-on">Disponível</span>
+          </a>
+          <a class="card" href="#estoque">
+            <span class="card-icon" aria-hidden="true">✧</span>
+            <h3>Estoque</h3>
+            <p>Informar os tamanhos e as quantidades disponíveis de cada peça.</p>
+            <span class="card-tag card-tag-on">Disponível em Produtos</span>
+          </a>
+          <a class="card" href="#fotografias">
+            <span class="card-icon" aria-hidden="true">◇</span>
+            <h3>Fotografias</h3>
+            <p>Enviar e organizar as fotos das peças direto do celular.</p>
+            <span class="card-tag card-tag-on">Disponível</span>
+          </a>
+          <a class="card" href="#entregas">
+            <span class="card-icon" aria-hidden="true">⌁</span>
+            <h3>Entregas e fretes</h3>
+            <p>Correios, CEP, retirada, taxas de referência e avisos para clientes.</p>
+            <span class="card-tag card-tag-on">Disponível para testes</span>
+          </a>
+          <a class="card" href="#personalizar">
+            <span class="card-icon" aria-hidden="true">◈</span>
+            <h3>Personalizar loja</h3>
+            <p>Cores, fontes, logo, banner, textos e organização da vitrine.</p>
+            <span class="card-tag card-tag-on">Disponível para testes</span>
+          </a>
+        </div>
+      </section>
+
+      <section id="tela-produtos" data-screen="produtos" hidden>
+
+        <!-- Lista de produtos -->
+        <div id="prod-list-view">
+          <div class="screen-head">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-line"></span> PRODUTOS</p>
+              <h2>Produtos</h2>
+            </div>
+            <a class="btn-primary btn-auto" href="#produtos/novo">+ Novo produto</a>
+          </div>
+          <div class="prod-tools">
+            <div class="tabs" role="group" aria-label="Filtrar por situação">
+              <button type="button" class="tab active" data-status="todos" aria-pressed="true">Todos <span data-count="todos">0</span></button>
+              <button type="button" class="tab" data-status="publicado" aria-pressed="false">Publicados <span data-count="publicado">0</span></button>
+              <button type="button" class="tab" data-status="desativado" aria-pressed="false">Desativados <span data-count="desativado">0</span></button>
+            </div>
+            <input type="search" id="prod-search" class="search-input" placeholder="Buscar peça" aria-label="Buscar produtos" autocomplete="off"/>
+          </div>
+          <p id="prod-status" class="status-line" role="status" aria-live="polite"></p>
+          <div id="prod-list" class="prod-list"></div>
+        </div>
+
+        <!-- Formulário (novo / editar) -->
+        <div id="prod-form-view" hidden>
+          <a class="back-link" href="#produtos" id="form-back">← Voltar à lista</a>
+          <p class="eyebrow form-eyebrow"><span class="eyebrow-line"></span> <span id="form-eyebrow">NOVO PRODUTO</span></p>
+          <h2 id="form-title">Novo produto</h2>
+          <p id="form-status" class="status-line" role="status" aria-live="polite"></p>
+
+          <form id="prod-form" class="prod-form" novalidate hidden>
+            <fieldset class="group">
+              <legend class="group-title">Informações</legend>
+              <div class="field">
+                <label for="f-nome">Nome da peça</label>
+                <input id="f-nome" type="text" maxlength="120" autocomplete="off" placeholder="Ex.: Vestido Midi"/>
+              </div>
+              <div class="field">
+                <label for="f-categoria">Categoria</label>
+                <select id="f-categoria"></select>
+              </div>
+              <div class="field">
+                <label for="f-preco">Preço (R$)</label>
+                <input id="f-preco" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 149,90"/>
+              </div>
+              <div class="field">
+                <label for="f-descricao">Descrição</label>
+                <textarea id="f-descricao" rows="5" maxlength="2000" placeholder="Tecido, caimento, como combinar…"></textarea>
+                <small id="count-descricao" class="counter">0/2000</small>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group-title">Detalhes opcionais</legend>
+              <div class="field">
+                <label for="f-destaque">Frase de destaque</label>
+                <input id="f-destaque" type="text" maxlength="120" autocomplete="off" placeholder="Ex.: Leveza para o dia a dia"/>
+                <small class="hint">Frase curta que aparece embaixo do nome no catálogo.</small>
+              </div>
+              <div class="field">
+                <label for="f-etiqueta">Etiqueta</label>
+                <input id="f-etiqueta" type="text" maxlength="30" autocomplete="off" placeholder="Ex.: Novidade"/>
+                <small class="hint">Selo que aparece sobre a foto.</small>
+              </div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group-title">Tamanhos e quantidades</legend>
+              <p class="hint">Toque nos tamanhos que você tem e informe quantas peças há de cada um.</p>
+              <div id="size-chips" class="chips"></div>
+              <div id="size-rows" class="size-rows"></div>
+            </fieldset>
+
+            <fieldset class="group">
+              <legend class="group-title">Publicação</legend>
+              <label class="switch"><input type="checkbox" id="f-publicado"/> <span>Publicado na loja</span></label>
+              <p class="hint">Desmarcado, a peça fica guardada no painel e não aparece para as clientes.</p>
+            </fieldset>
+
+            <p id="form-message" class="message" role="alert" aria-live="assertive"></p>
+            <div class="form-actions">
+              <button type="submit" id="form-save" class="btn-primary">Salvar produto</button>
+              <a class="btn-outline btn-wide" href="#produtos" id="form-cancel">Cancelar</a>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section id="tela-estoque" data-screen="estoque" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> ESTOQUE</p>
+        <h2>Estoque</h2>
+        <div class="soon"><strong>Uma tela só de estoque virá em uma etapa seguinte.</strong>Por enquanto, os tamanhos e as quantidades são alterados dentro de cada produto: Produtos → Editar.</div>
+        <a class="back-link" href="#">← Voltar ao início</a>
+      </section>
+
+      <section id="tela-fotografias" data-screen="fotografias" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> FOTOGRAFIAS</p>
+        <h2>Fotografias</h2>
+        <p class="lead">Escolha uma peça, envie fotos do celular e organize a ordem. A primeira será a foto principal.</p>
+        <div class="fotos-select">
+          <label for="fotos-produto">Produto</label>
+          <select id="fotos-produto"><option value="">Selecione um produto…</option></select>
+          <a id="fotos-editar" class="back-link" href="#produtos" style="margin-top:9px">Editar dados da peça</a>
+        </div>
+        <p id="fotos-status" class="status-line" role="status" aria-live="polite"></p>
+        <div id="fotos-operacoes" hidden>
+          <div class="fotos-head">
+            <h3>Fotografias salvas</h3>
+            <span id="fotos-contador" class="hint">0 de 8 fotografias</span>
+          </div>
+          <div id="fotos-galeria" class="fotos-galeria"></div>
+          <div class="fotos-upload-box">
+            <h3>Adicionar fotografias</h3>
+            <p class="hint">JPG, PNG ou WebP. Até 8 por produto. As imagens são reduzidas antes do envio (máximo 1600 px de lado).</p>
+            <label for="fotos-files" class="btn-outline foto-file-label">Escolher fotos no celular</label>
+            <input id="fotos-files" type="file" accept="image/jpeg,image/png,image/webp" multiple />
+            <h4 id="fotos-pending-title" hidden>Prévia — ainda não salvas</h4>
+            <div id="fotos-previews" class="fotos-previews"></div>
+            <button id="fotos-upload" type="button" class="btn-primary" disabled>Enviar fotografias</button>
+            <p id="fotos-busy" class="hint" role="status"></p>
+          </div>
+          <p class="hint">Atenção: como o bucket é público, qualquer pessoa que tiver o link direto de uma foto poderá vê-la, mesmo antes da publicação da roupa.</p>
+        </div>
+      </section>
+
+      <!-- Personalização visual: somente após autenticação e confirmação administrativa -->
+      <section id="tela-personalizar" data-screen="personalizar" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> IDENTIDADE VISUAL</p>
+        <h2>Personalizar loja</h2>
+        <p class="lead">Veja uma prévia antes de publicar as alterações. O site atual só muda quando você toca em Salvar.</p>
+        <p id="tema-status" class="status-line" role="status" aria-live="polite"></p>
+        <form id="tema-form" class="prod-form" hidden novalidate>
+          <fieldset class="group">
+            <legend class="group-title">Cores e fontes</legend>
+            <div class="tema-colors">
+              <label>Cor de destaque <input type="color" id="tema-cor-destaque" value="#b67b68"/></label>
+              <label>Fundo do site <input type="color" id="tema-cor-fundo" value="#fffdfa"/></label>
+              <label>Cor dos textos <input type="color" id="tema-cor-texto" value="#29221f"/></label>
+            </div>
+            <div class="field"><label for="tema-fonte">Estilo das fontes</label>
+              <select id="tema-fonte"><option value="original">Original — elegante</option><option value="classico">Clássico — serifas</option><option value="moderno">Moderno — minimalista</option></select>
+            </div>
+            <div class="field"><label for="tema-grade">Organização dos produtos no computador</label>
+              <select id="tema-grade"><option value="3">3 produtos por linha</option><option value="2">2 produtos por linha</option><option value="4">4 produtos por linha</option></select>
+              <small class="hint">No celular, o site continua mostrando duas peças por linha.</small>
+            </div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Textos de apresentação</legend>
+            <div class="field"><label for="tema-linha1">Primeira linha do título</label><input id="tema-linha1" maxlength="65"/></div>
+            <div class="field"><label for="tema-linha2">Segunda linha do título</label><input id="tema-linha2" maxlength="65"/></div>
+            <div class="field"><label for="tema-subtitulo">Descrição do banner</label><textarea id="tema-subtitulo" rows="3" maxlength="280"></textarea></div>
+            <div class="field"><label for="tema-chamada-input">Frase na faixa superior</label><input id="tema-chamada-input" maxlength="120"/></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Logo e imagem principal</legend>
+            <p class="hint">JPG, PNG ou WebP, até 5 MB no arquivo original. Recomendamos logo com fundo transparente e banner horizontal.</p>
+            <div class="field"><label for="tema-logo-input">Enviar logo oficial</label><input type="file" id="tema-logo-input" accept="image/jpeg,image/png,image/webp"/></div>
+            <label class="switch"><input type="checkbox" id="tema-remover-logo"/><span>Usar logo de texto original (remover a logo personalizada)</span></label>
+            <div class="field" style="margin-top:18px"><label for="tema-banner-input">Enviar imagem principal (banner)</label><input type="file" id="tema-banner-input" accept="image/jpeg,image/png,image/webp"/></div>
+            <label class="switch"><input type="checkbox" id="tema-remover-banner"/><span>Restaurar a ilustração original do banner</span></label>
+          </fieldset>
+          <div class="tema-preview" id="tema-preview" aria-label="Prévia não publicada">
+            <div class="tema-preview-label">PRÉVIA — NÃO PUBLICADA</div>
+            <div class="tema-preview-top"><span id="tema-preview-logo-text"><span class="lume-wordmark" aria-hidden="true"><span class="lume-wordmark-script">Lume<span class="lume-wordmark-star">✳</span></span><span class="lume-wordmark-sub">WOMAN</span></span></span><img id="tema-preview-logo-img" alt="Prévia da logo" hidden/></div>
+            <div class="tema-preview-row"><div class="tema-preview-copy"><h3><span id="tema-preview-l1">Vista a sua</span><br/><em id="tema-preview-l2">melhor versão.</em></h3><p id="tema-preview-desc">Peças casuais e sociais para se sentir confiante.</p><span class="tema-preview-button">Explorar coleção</span></div><img id="tema-preview-banner-img" src="../assets/hero.svg" alt="Prévia do banner"/></div>
+          </div>
+          <p class="hint">A prévia é ilustrativa. Confira também o site publicado após salvar.</p>
+          <p id="tema-mensagem" class="message" role="alert" aria-live="assertive"></p>
+          <div class="form-actions">
+            <button type="submit" id="tema-salvar" class="btn-primary">Salvar e publicar visual</button>
+            <button type="button" id="tema-restaurar" class="btn-outline btn-wide">Restaurar valores padrão na prévia</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- V7: gestão simples de entregas, no mesmo painel autenticado -->
+      <section id="tela-entregas" data-screen="entregas" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> LOGÍSTICA</p>
+        <h2>Entregas e fretes</h2>
+        <p class="lead">Ative as modalidades e ajuste as orientações. O frete final dos Correios é confirmado pela equipe conforme o CEP e o custo da postagem.</p>
+        <p id="ent-status" class="status-line" role="status" aria-live="polite"></p>
+        <button id="ent-recarregar" type="button" class="btn-outline ent-reload">Recarregar configurações</button>
+        <form id="ent-form" class="prod-form" hidden novalidate>
+          <fieldset class="group">
+            <legend class="group-title">Formas de receber</legend>
+            <div class="ent-switches">
+              <label class="switch"><input type="checkbox" id="ent-correios-ativo"/><span>Envio pelos Correios</span></label>
+              <label class="switch"><input type="checkbox" id="ent-local-ativo"/><span>Entrega na região</span></label>
+              <label class="switch"><input type="checkbox" id="ent-retirada-ativa"/><span>Retirada a combinar</span></label>
+            </div>
+            <small class="hint">Mantenha pelo menos uma modalidade ativa. As alterações entram na vitrine após salvar.</small>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Correios</legend>
+            <div class="field">
+              <label for="ent-correios-referencia">Valor de referência opcional (R$)</label>
+              <input id="ent-correios-referencia" type="text" inputmode="decimal" autocomplete="off" placeholder="Deixe vazio para cotar no WhatsApp"/>
+              <small class="hint"><strong>Não é o preço oficial dos Correios.</strong> O valor final é calculado manualmente na postagem; pode variar com CEP, peso e tamanho do pacote. Deixe vazio se não quiser divulgar uma estimativa.</small>
+            </div>
+            <div class="field"><label for="ent-texto-correios">Orientações para envio</label><textarea id="ent-texto-correios" maxlength="240" rows="3"></textarea></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Entrega na região</legend>
+            <div class="field"><label for="ent-regiao">Como chamar a região atendida</label><input id="ent-regiao" maxlength="120" placeholder="Ex.: Entrega em Louveira e região"/></div>
+            <div class="field"><label for="ent-taxa-local">Taxa de referência opcional (R$)</label><input id="ent-taxa-local" type="text" inputmode="decimal" autocomplete="off" placeholder="Ex.: 10,00 ou deixe vazio"/><small class="hint">Essa é uma referência para a cliente. A equipe confirma o valor antes da compra.</small></div>
+            <div class="field"><label for="ent-texto-local">Orientações para entrega local</label><textarea id="ent-texto-local" maxlength="240" rows="3"></textarea></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Retirada</legend>
+            <div class="field"><label for="ent-texto-retirada">Informações sobre a retirada</label><textarea id="ent-texto-retirada" maxlength="240" rows="3"></textarea></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Aviso exibido no carrinho</legend>
+            <div class="field"><label for="ent-aviso-geral">Mensagem geral</label><textarea id="ent-aviso-geral" maxlength="240" rows="3"></textarea></div>
+          </fieldset>
+          <p id="ent-message" class="message" role="alert" aria-live="assertive"></p>
+          <div class="form-actions"><button type="submit" id="ent-save" class="btn-primary">Salvar opções de entrega</button></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Biblioteca oficial do Supabase (versão fixa, por segurança) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="produtos.js"></script>
+  <script src="fotos.js"></script>
+  <script src="tema-admin.js"></script>
+  <script src="entregas-admin.js"></script>
+  <script src="admin.js"></script>
+  <script src="tema-logo-admin.js"></script>
+</body>
+</html>
