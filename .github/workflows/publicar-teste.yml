@@ -24,6 +24,6 @@ jobs:
       - name: Enviar versao sem publicar
         uses: cloudflare/wrangler-action@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          apiToken: ${{ secrets.CLOUDFLARE_TEST_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: versions upload --name lumewoman --assets=./site --compatibility-date 2026-11-01 --preview-alias teste
+          command: deploy --name lumewoman-teste --assets=./site --compatibility-date 2026-11-01
