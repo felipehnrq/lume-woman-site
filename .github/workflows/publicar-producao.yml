@@ -22,6 +22,10 @@ jobs:
           find site -type f -name .gitkeep -delete
           sed -i 's/modoTeste: true/modoTeste: false/' site/config.js
           grep -q 'modoTeste: false' site/config.js
+          sed -i '/<div class="demo-alert">/d' site/index.html
+          sed -i '/<span class="footer-note">Ambiente de testes/d' site/index.html
+          sed -i 's|<p class="small-note"><strong>Modo de testes:</strong> a mensagem ao WhatsApp será identificada como TESTE e não deve ser tratada como pedido real.</p>||' site/index.html
+
 
       - name: Publicar no Cloudflare
         uses: cloudflare/wrangler-action@v4
