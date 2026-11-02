@@ -70,6 +70,7 @@
     <nav class="panel-nav" aria-label="Navegação do painel">
       <a href="#" data-nav="inicio"><span aria-hidden="true">✳</span> Início</a>
       <a href="#produtos" data-nav="produtos"><span aria-hidden="true">♡</span> Produtos</a>
+      <a href="#vendas" data-nav="vendas"><span aria-hidden="true">▤</span> Vendas</a>
       <a href="#estoque" data-nav="estoque"><span aria-hidden="true">✧</span> Estoque</a>
       <a href="#fotografias" data-nav="fotografias"><span aria-hidden="true">◇</span> Fotografias</a>
       <a href="#personalizar" data-nav="personalizar"><span aria-hidden="true">◈</span> Personalizar</a>
@@ -88,6 +89,7 @@
             <p>Cadastrar peças, alterar nomes, preços, descrições, tamanhos e quantidades, publicar ou desativar.</p>
             <span class="card-tag card-tag-on">Disponível</span>
           </a>
+          <a class="card" href="#vendas"><span class="card-icon" aria-hidden="true">▤</span><h3>Vendas</h3><p>Registrar vendas confirmadas pelo WhatsApp e acompanhar o faturamento.</p><span class="card-tag card-tag-on">Novo módulo</span></a>
           <a class="card" href="#estoque">
             <span class="card-icon" aria-hidden="true">✧</span>
             <h3>Estoque</h3>
@@ -113,6 +115,31 @@
             <span class="card-tag card-tag-on">Disponível para testes</span>
           </a>
         </div>
+      </section>
+
+      <section id="tela-vendas" data-screen="vendas" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> CONTROLE DE VENDAS</p>
+        <h2>Vendas confirmadas</h2>
+        <p class="lead">Registre somente vendas confirmadas no WhatsApp. Este módulo não altera o estoque automaticamente.</p>
+        <p id="vendas-status" role="status" aria-live="polite"></p>
+        <div class="vendas-indicadores" aria-label="Indicadores de vendas">
+          <div><small>Faturamento confirmado</small><strong id="vendas-total">R$ 0,00</strong></div>
+          <div><small>Vendas confirmadas</small><strong id="vendas-count">0</strong></div>
+          <div><small>Ticket médio</small><strong id="vendas-ticket">R$ 0,00</strong></div>
+        </div>
+        <form id="vendas-form" class="vendas-form" autocomplete="off">
+          <h3>Registrar venda</h3>
+          <div class="field"><label for="venda-cliente">Nome da cliente *</label><input id="venda-cliente" maxlength="120" required /></div>
+          <div class="field"><label for="venda-telefone">Telefone (opcional)</label><input id="venda-telefone" type="tel" maxlength="25" placeholder="(11) 99999-9999" /></div>
+          <div class="field"><label for="venda-itens">Produtos, tamanhos e quantidades *</label><textarea id="venda-itens" rows="3" maxlength="1500" required placeholder="Ex.: Blusa azul M × 1; Calça preta 40 × 1"></textarea></div>
+          <div class="field"><label for="venda-valor">Valor total confirmado (R$) *</label><input id="venda-valor" inputmode="decimal" placeholder="Ex.: 149,90" required /></div>
+          <div class="field"><label for="venda-data">Data da venda *</label><input id="venda-data" type="date" required /></div>
+          <div class="field"><label for="venda-notas">Observações (opcional)</label><textarea id="venda-notas" rows="2" maxlength="500"></textarea></div>
+          <p id="vendas-erro" class="message" role="alert"></p>
+          <div class="form-actions"><button id="vendas-salvar" class="btn-primary" type="submit">Registrar venda confirmada</button></div>
+        </form>
+        <div class="vendas-lista-topo"><h3>Histórico de vendas</h3><button type="button" id="vendas-atualizar" class="btn-secondary">Atualizar</button></div>
+        <div id="vendas-lista"></div>
       </section>
 
       <section id="tela-produtos" data-screen="produtos" hidden>
@@ -341,6 +368,7 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- Biblioteca oficial do Supabase (versão fixa, por segurança) -->
+  <link rel="stylesheet" href="vendas.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
   <script src="supabase-config.js"></script>
   <script src="produtos.js"></script>
@@ -348,6 +376,7 @@
   <script src="tema-admin.js"></script>
   <script src="entregas-admin.js"></script>
   <script src="admin.js"></script>
+  <script src="vendas.js"></script>
   <script src="tema-logo-admin.js"></script>
 </body>
 </html>
