@@ -1,0 +1,29 @@
+
+name: Publicar Lume Woman em producao
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter arquivos
+        uses: actions/checkout@v4
+
+      - name: Separar arquivos publicos da loja
+        run: |
+          mkdir -p site
+          cp _headers app.js catalogo-supabase.js config.js entregas-publico.js index.html marca.css styles.css tema-publico.js site/
+          cp -R admin assets politicas site/
+          find site -type f -name .gitkeep -delete
+
+      - name: Publicar no Worker principal
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_TEST_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --name lumewoman --assets=./site --compatibility-date 2026-11-01
