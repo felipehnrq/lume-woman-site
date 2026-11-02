@@ -4,3 +4,5 @@ wrangler.jsonc
 .gitkeep
 .git/
 .github/
+node_modules/
+**/node_modules
