@@ -265,3 +265,5 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 #view-login .logo [data-theme-logo-fallback],#view-panel .logo [data-theme-logo-fallback]{display:flex;justify-content:center;}
 #tema-preview-logo-text .lume-wordmark-script{font-size:32px;}
 #tema-preview-logo-text .lume-wordmark-sub{font-size:8px;}
+
+#tema-form input[type=range]{width:100%;accent-color:#b67b68} .v106-depoimento{padding:15px;border:1px solid #e2d8d2;border-radius:10px;margin:12px 0}.v106-depoimento .field{margin:9px 0}#tema-preview-banner-img{object-fit:cover;object-position:var(--preview-x,50%) var(--preview-y,50%);transform:scale(var(--preview-zoom,1));transform-origin:var(--preview-x,50%) var(--preview-y,50%)}.tema-preview-row{overflow:hidden}

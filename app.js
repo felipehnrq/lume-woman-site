@@ -56,6 +56,7 @@
   function renderCart() {
     $('cart-count').textContent=count();$('drawer-count').textContent=`(${count()})`;
     $('cart-subtotal').textContent=brl(subtotal());
+    const orderOptions=$('cart-order-options');if(orderOptions)orderOptions.hidden=!cart.length;
     $('checkout').disabled=!ready||!validPhone()||!cart.length||!window.LumeEntregas?.isReady?.();
     $('checkout').title=!window.LumeEntregas?.isReady?.()?'Aguardando confirmar as modalidades de entrega':(validPhone()?(cfg.modoTeste === true?'Abrir mensagem de teste no WhatsApp':'Enviar pedido pelo WhatsApp'):'WhatsApp ainda não configurado para pedidos');
     $('cart-items').innerHTML=cart.length?cart.map((line,index)=>{

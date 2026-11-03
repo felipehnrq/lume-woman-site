@@ -7,7 +7,7 @@
 window.LUME_CONFIG = {
   nome: 'Lume Woman',
   whatsapp: '5519983364406',
-  modoTeste: false,
+  modoTeste: true,
   instagram: '', // Definir quando a loja fornecer o endereço oficial.
   cidade: 'Entregas na região',
   mensagemBoasVindas: 'Olá! Vim pelo site da Lume Woman e gostaria de saber mais.'

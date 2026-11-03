@@ -304,10 +304,26 @@
             <div class="field" style="margin-top:18px"><label for="tema-banner-input">Enviar imagem principal (banner)</label><input type="file" id="tema-banner-input" accept="image/jpeg,image/png,image/webp"/></div>
             <label class="switch"><input type="checkbox" id="tema-remover-banner"/><span>Restaurar a ilustração original do banner</span></label>
           </fieldset>
+          <fieldset class="group"><legend class="group-title">Enquadramento da imagem principal</legend>
+            <p class="hint">Ajuste a posição e o zoom da foto sem modificar o arquivo original.</p>
+            <div class="field"><label for="tema-banner-zoom">Zoom da capa: <output id="tema-banner-zoom-valor">100%</output></label><input type="range" id="tema-banner-zoom" min="100" max="180" value="100"/></div>
+            <div class="field"><label for="tema-banner-x">Posição horizontal: <output id="tema-banner-x-valor">50%</output></label><input type="range" id="tema-banner-x" min="0" max="100" value="50"/></div>
+            <div class="field"><label for="tema-banner-y">Posição vertical: <output id="tema-banner-y-valor">50%</output></label><input type="range" id="tema-banner-y" min="0" max="100" value="50"/></div>
+          </fieldset>
+          <fieldset class="group"><legend class="group-title">Sobre a Lume</legend>
+            <div class="field"><label for="tema-sobre-titulo-input">Título</label><input id="tema-sobre-titulo-input" maxlength="100"/></div>
+            <div class="field"><label for="tema-sobre-texto-input">História da loja</label><textarea id="tema-sobre-texto-input" rows="4" maxlength="800"></textarea></div>
+            <div class="field"><label for="tema-sobre-foto-input">Foto da proprietária</label><input type="file" id="tema-sobre-foto-input" accept="image/jpeg,image/png,image/webp"/></div>
+            <label class="switch"><input type="checkbox" id="tema-remover-sobre-foto"/><span>Remover foto da proprietária</span></label>
+          </fieldset>
+          <fieldset class="group"><legend class="group-title">Depoimentos de clientes</legend>
+            <p class="hint">Publique somente relatos reais, com autorização da cliente. Deixe os campos vazios para ocultar o depoimento.</p>
+            <div id="tema-depoimentos-editor"></div>
+          </fieldset>
           <div class="tema-preview" id="tema-preview" aria-label="Prévia não publicada">
             <div class="tema-preview-label">PRÉVIA — NÃO PUBLICADA</div>
             <div class="tema-preview-top"><span id="tema-preview-logo-text"><span class="lume-wordmark" aria-hidden="true"><span class="lume-wordmark-script">Lume<span class="lume-wordmark-star">✳</span></span><span class="lume-wordmark-sub">WOMAN</span></span></span><img id="tema-preview-logo-img" alt="Prévia da logo" hidden/></div>
-            <div class="tema-preview-row"><div class="tema-preview-copy"><h3><span id="tema-preview-l1">Vista a sua</span><br/><em id="tema-preview-l2">melhor versão.</em></h3><p id="tema-preview-desc">Peças casuais e sociais para se sentir confiante.</p><span class="tema-preview-button">Explorar coleção</span></div><img id="tema-preview-banner-img" src="../assets/hero.svg" alt="Prévia do banner"/></div>
+            <div class="tema-preview-row"><div class="tema-preview-copy"><h3><span id="tema-preview-l1">Peças para vestir</span><br/><em id="tema-preview-l2">seus melhores momentos.</em></h3><p id="tema-preview-desc">Moda feminina casual e social, escolhida para diferentes ocasiões.</p><span class="tema-preview-button">Ver a coleção</span></div><img id="tema-preview-banner-img" src="../assets/hero.svg" alt="Prévia do banner"/></div>
           </div>
           <p class="hint">A prévia é ilustrativa. Confira também o site publicado após salvar.</p>
           <p id="tema-mensagem" class="message" role="alert" aria-live="assertive"></p>
@@ -377,6 +393,6 @@
   <script src="entregas-admin.js"></script>
   <script src="admin.js"></script>
   <script src="vendas.js"></script>
-  <script src="tema-logo-admin.js"></script>
+  <script src="tema-logo-admin.js"></script><script src="vitrine-admin-v106.js"></script>
 </body>
 </html>

@@ -56,3 +56,17 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
 .policy-cart-links{line-height:1.6}
 .policy-cart-links a{color:var(--clay,#98695e);text-decoration:underline;text-underline-offset:2px}
 @media(max-width:700px){.footer-institutional{max-width:100%}.footer-links{gap:14px 18px}}
+
+/* V10.6 — vitrine editorial e controle de enquadramento */
+.hero-stamp{display:none!important}
+.hero-art{overflow:hidden}
+.hero-art>img{object-fit:cover;object-position:var(--hero-position-x,50%) var(--hero-position-y,50%);transform:scale(var(--hero-zoom,1));transform-origin:var(--hero-position-x,50%) var(--hero-position-y,50%)}
+.social-section{padding-top:55px;padding-bottom:65px}
+.social-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+.social-testimonial{border:1px solid #e8ddd6;background:#fffdfa;padding:22px;border-radius:12px}
+.social-testimonial blockquote{margin:12px 0;line-height:1.7}
+.social-testimonial img{width:100%;max-height:230px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+.social-testimonial small{color:#77645c}
+.about-photo{max-width:280px;width:100%;max-height:340px;object-fit:cover;border-radius:12px;margin-top:18px}
+#cart-order-options[hidden],#depoimentos[hidden]{display:none!important}
+@media(max-width:680px){.social-grid{grid-template-columns:1fr}.hero-art>img{min-height:100%}}
