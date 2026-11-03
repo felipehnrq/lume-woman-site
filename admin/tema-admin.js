@@ -125,7 +125,8 @@
       // Se houver falha após upload, a foto pode ficar sem referência; sem sobrescrever a anterior.
       if(logo&&!$('tema-remover-logo').checked)t.logo_caminho=await upload(logo,'logo');
       if(banner&&!$('tema-remover-banner').checked)t.banner_caminho=await upload(banner,'banner');
-      const {data,error}=await P.client.from('loja_tema').update({...t,updated_at:new Date().toISOString()}).eq('id',1).select('id,updated_at').maybeSingle();
+      const extra=window.LumeV106ReadAndUpload?await window.LumeV106ReadAndUpload():{};
+      const {data,error}=await P.client.from('loja_tema').update({...t,...extra,updated_at:new Date().toISOString()}).eq('id',1).select('id,updated_at').maybeSingle();
       if(error)throw error;
       if(!data)throw Error('O banco não confirmou a gravação da configuração.');
       fill(t);window.dispatchEvent(new CustomEvent('lume-tema-salvo',{detail:{logo_caminho:t.logo_caminho}}));setStatus('Visual publicado com sucesso. Abra a loja e atualize a página para conferir.');
