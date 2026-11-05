@@ -57,8 +57,8 @@
     $('cart-count').textContent=count();$('drawer-count').textContent=`(${count()})`;
     $('cart-subtotal').textContent=brl(subtotal());
     const orderOptions=$('cart-order-options');if(orderOptions)orderOptions.hidden=!cart.length;
-    $('checkout').disabled=!ready||!validPhone()||!cart.length||!window.LumeEntregas?.isReady?.();
-    $('checkout').title=!window.LumeEntregas?.isReady?.()?'Aguardando confirmar as modalidades de entrega':(validPhone()?(cfg.modoTeste === true?'Abrir mensagem de teste no WhatsApp':'Enviar pedido pelo WhatsApp'):'WhatsApp ainda não configurado para pedidos');
+    $('checkout').disabled=!ready||!validPhone()||!cart.length||!window.LumeEntregas?.isReady?.()||!window.LumePagamentos?.isReady?.();
+    $('checkout').title=!window.LumeEntregas?.isReady?.()?'Aguardando confirmar as modalidades de entrega':(!window.LumePagamentos?.isReady?.()?'Carregando condições de pagamento':(validPhone()?(cfg.modoTeste === true?'Abrir mensagem de teste no WhatsApp':'Enviar pedido pelo WhatsApp'):'WhatsApp ainda não configurado para pedidos'));
     $('cart-items').innerHTML=cart.length?cart.map((line,index)=>{
       const p=product(line.id);if(!p)return '';
       return `<div class="cart-line"><img src="${esc(p.imagem)}" alt=""/>
@@ -76,7 +76,7 @@
     const p=product(id);if(!p||!available(p))return;
     closeCart();chosen=p;chosenSize=null;
     const intro=[p.descricao,p.destaque].filter(Boolean).join(' · ') || 'Selecione seu tamanho para adicionar à sacola.';
-    const thumbs=(p.imagens||[]).length>1 ? `<div class="detail-thumbs" role="group" aria-label="Fotografias de ${esc(p.nome)}">${p.imagens.map((src,i)=>`<button type="button" class="detail-thumb ${i===0?'active':''}" data-photo="${i}" aria-label="Ver fotografia ${i+1}"><img src="${esc(src)}" alt=""/></button>`).join('')}</div>`:'';
+    const thumbs=(p.imagens||[]).length>1 ? `<div class="detail-thumbs" role="group" aria-label="Fotografias de ${esc(p.nome)}">${p.imagens.map((src,i)=>`<button type="button" class="detail-thumb ${i===0?'active':''}" data-photo="${i}" aria-pressed="${i===0}" aria-label="Ver fotografia ${i+1}"><img src="${esc(src)}" alt=""/></button>`).join('')}</div>`:'';
     $('product-dialog-content').innerHTML=`<div class="product-detail-layout"><div class="detail-visual"><img class="detail-main-img" src="${esc(p.imagem)}" alt="${esc(p.semFoto?'Foto em breve: '+p.nome:'Fotografia de '+p.nome)}"/>${thumbs}</div>
       <div class="detail-copy"><p class="eyebrow">${esc(p.categoria)} / LUME WOMAN</p><h2 id="dialog-product-name">${esc(p.nome)}</h2>
       <div class="detail-price">${brl(p.preco)}</div><p class="detail-sub">${esc(intro)}</p>
@@ -113,12 +113,14 @@
     const details=cart.map(line=>{
       const p=product(line.id);return `• ${line.qty}x ${p.nome} (${p.id}) | Tam. ${line.size} | ${brl(p.preco*line.qty)}`;
     }).join('\n');
+    if(!window.LumePagamentos?.isReady?.()){toast('Aguarde carregar as condições de pagamento.');return;}
     const pagamentoSelecionado=document.querySelector('input[name="forma-pagamento"]:checked');
-    const formasAceitas={pix:'Pix',credito:'Cartão de crédito (até 3x sem juros; parcelas a confirmar)',debito:'Cartão de débito'};
-    const formaPagamento=pagamentoSelecionado && formasAceitas[pagamentoSelecionado.value];
+    const formaPagamento=window.LumePagamentos.hasMethods()
+      ? pagamentoSelecionado && window.LumePagamentos.getPedido(pagamentoSelecionado.value)
+      : 'A combinar pelo WhatsApp';
     if(!formaPagamento){
-      toast('Selecione como prefere pagar: Pix, crédito ou débito.');
-      document.querySelector('input[name="forma-pagamento"]')?.focus();
+      toast('Selecione uma das formas de pagamento disponíveis.');
+      document.querySelector('input[name="forma-pagamento"]:not(:disabled)')?.focus();
       return;
     }
     const cep=delivery.cep?`\nCEP para cotação: ${delivery.cep}`:'';
@@ -129,8 +131,11 @@
     const size=e.target.closest('[data-size]');if(size){chosenSize=size.dataset.size;document.querySelectorAll('.size-option').forEach(b=>{const active=b===size;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))})}
     const photograph=e.target.closest('[data-photo]');if(photograph && chosen){
       const index=Number(photograph.dataset.photo);
+      if(!Number.isInteger(index)||!chosen.imagens[index])return;
       $('product-dialog-content').querySelector('.detail-main-img').src=chosen.imagens[index];
-      document.querySelectorAll('.detail-thumb').forEach(b=>b.classList.toggle('active',b===photograph));
+      document.querySelectorAll('.detail-thumb').forEach(b=>{
+        const active=b===photograph;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+      });
     }
     if(e.target.closest('#confirm-add'))add();
     const remove=e.target.closest('[data-remove]');if(remove){cart.splice(Number(remove.dataset.remove),1);persist();renderCart()}
@@ -152,6 +157,7 @@
   $('contact-footer').addEventListener('click',()=>goWhatsApp(cfg.mensagemBoasVindas||'Olá, Lume Woman!'));
   if(!/^https:\/\/(www\.)?instagram\.com\/[^\s]+$/i.test(cfg.instagram||''))$('instagram-link').hidden=true;
   document.addEventListener('lume:entregas-carregadas',renderCart);
+  document.addEventListener('lume:pagamentos-carregados',renderCart);
   $('instagram-link').addEventListener('click',()=>{
     if(/^https:\/\/(www\.)?instagram\.com\/[^\s]+$/i.test(cfg.instagram||''))window.open(cfg.instagram,'_blank','noopener,noreferrer');
     else toast('Instagram ainda não configurado em config.js.');

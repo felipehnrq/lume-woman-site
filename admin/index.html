@@ -75,6 +75,7 @@
       <a href="#fotografias" data-nav="fotografias"><span aria-hidden="true">◇</span> Fotografias</a>
       <a href="#personalizar" data-nav="personalizar"><span aria-hidden="true">◈</span> Personalizar</a>
       <a href="#entregas" data-nav="entregas"><span aria-hidden="true">⌁</span> Entregas</a>
+      <a href="#pagamentos" data-nav="pagamentos"><span aria-hidden="true">◇</span> Pagamentos</a>
     </nav>
 
     <main class="panel-main">
@@ -378,6 +379,48 @@
           <div class="form-actions"><button type="submit" id="ent-save" class="btn-primary">Salvar opções de entrega</button></div>
         </form>
       </section>
+      <section id="tela-pagamentos" data-screen="pagamentos" hidden>
+        <p class="eyebrow"><span class="eyebrow-line"></span> CONDIÇÕES COMERCIAIS</p>
+        <h2>Pagamentos</h2>
+        <p class="lead">Personalize as condições de Pix, cartão de crédito e cartão de débito. O pedido continua sendo confirmado pelo WhatsApp.</p>
+        <p id="pag-status" class="status-line" role="status" aria-live="polite"></p>
+        <button id="pag-reload" type="button" class="btn-outline ent-reload">Recarregar condições</button>
+        <form id="pag-form" class="prod-form" hidden>
+          <fieldset class="group">
+            <legend class="group-title">Formas de pagamento na vitrine</legend>
+            <div class="ent-switches">
+              <label class="switch"><input id="pag-pix_ativo" type="checkbox" checked/><span>Exibir Pix na vitrine</span></label>
+              <label class="switch"><input id="pag-credito_ativo" type="checkbox" checked/><span>Exibir cartão de crédito na vitrine</span></label>
+              <label class="switch"><input id="pag-debito_ativo" type="checkbox" checked/><span>Exibir cartão de débito na vitrine</span></label>
+            </div>
+            <p class="hint">Desmarque para ocultar uma forma de pagamento. Se ocultar todas, o pagamento será combinado com a loja pelo WhatsApp. As alterações só entram na vitrine depois de salvar e atualizar a página.</p>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Pix</legend>
+            <div class="field"><label for="pag-pix_texto">Condições e instruções (opcional)</label><textarea id="pag-pix_texto" rows="3" maxlength="240"></textarea></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Cartão de crédito</legend>
+            <div class="field"><label for="pag-credito_parcelas">Número máximo de parcelas</label><input id="pag-credito_parcelas" type="number" min="1" max="12" step="1" value="3" required/></div>
+            <label class="switch"><input id="pag-credito_sem_juros" type="checkbox" checked/><span>Parcelamento sem juros</span></label>
+            <div class="field"><label for="pag-credito_texto">Condições adicionais (opcional)</label><textarea id="pag-credito_texto" rows="3" maxlength="240"></textarea><small class="hint">Informe valores mínimos ou condições de juros, se houver. As parcelas e os valores finais são confirmados pela equipe.</small></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Cartão de débito</legend>
+            <div class="field"><label for="pag-debito_texto">Condições e instruções (opcional)</label><textarea id="pag-debito_texto" rows="3" maxlength="240"></textarea></div>
+          </fieldset>
+          <fieldset class="group">
+            <legend class="group-title">Orientação geral</legend>
+            <div class="field"><label for="pag-aviso_geral">Texto para as clientes</label><textarea id="pag-aviso_geral" rows="3" maxlength="240" required></textarea></div>
+            <p class="hint">Os textos aparecem no carrinho e na página de pagamentos. As condições do método escolhido acompanham a mensagem do pedido.</p>
+          </fieldset>
+          <p id="pag-message" class="message" role="alert"></p>
+          <div class="form-actions">
+            <button id="pag-save" class="btn-primary" type="submit">Salvar condições de pagamento</button>
+            <button id="pag-defaults" class="btn-outline" type="button">Preencher valores padrão</button>
+          </div>
+        </form>
+      </section>
     </main>
   </div>
 
@@ -391,6 +434,8 @@
   <script src="fotos.js"></script>
   <script src="tema-admin.js"></script>
   <script src="entregas-admin.js"></script>
+  <script src="../pagamentos.js"></script>
+  <script src="pagamentos-admin.js"></script>
   <script src="admin.js"></script>
   <script src="vendas.js"></script>
   <script src="tema-logo-admin.js"></script><script src="vitrine-admin-v106.js"></script>

@@ -17,7 +17,7 @@ jobs:
       - name: Preparar arquivos da loja
         run: |
           mkdir -p site
-          cp _headers app.js catalogo-supabase.js config.js entregas-publico.js index.html marca.css styles.css tema-publico.js vitrine-v106.js site/
+          cp _headers app.js catalogo-supabase.js config.js entregas-publico.js index.html marca.css pagamentos.js pagamentos-publico.js styles.css tema-publico.js vitrine-v106.js site/
           cp -R admin assets politicas site/
           find site -type f -name .gitkeep -delete
           sed -i 's/modoTeste: true/modoTeste: false/' site/config.js
