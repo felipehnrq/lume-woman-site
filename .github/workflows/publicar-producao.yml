@@ -22,6 +22,12 @@ jobs:
           find site -type f -name .gitkeep -delete
           sed -i 's/modoTeste: true/modoTeste: false/' site/config.js
           grep -q 'modoTeste: false' site/config.js
+          # Liberar indexação exclusivamente em produção
+          sed -i '/<meta name="robots" content="noindex,nofollow,noarchive"/d' site/index.html
+          sed -i '/X-Robots-Tag: noindex, nofollow, noarchive/d' site/_headers
+          cp robots.txt sitemap.xml site/
+          ! grep -qi 'noindex' site/index.html site/_headers
+
           sed -i '/<div class="demo-alert">/d' site/index.html
           sed -i 's|<span class="footer-note">Ambiente de testes • Textos institucionais em revisão. Mensagens de pedido serão identificadas como teste.</span>||' site/index.html
           sed -i 's|<div class="hero-stamp" aria-hidden="true"><span>SEU</span><strong>estilo</strong><span>EM PRIMEIRO LUGAR</span></div>||' site/index.html
