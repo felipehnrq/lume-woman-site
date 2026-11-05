@@ -2,6 +2,7 @@
 (() => {
  'use strict';
  const CACHE_KEY = 'lume_woman_logo_publica';
+ const BANNER_CACHE_KEY = 'lume_woman_banner_publico';
  const defaults = {
    cor_destaque:'#b67b68', cor_fundo:'#fffdfa', cor_texto:'#29221f', fonte:'original', grade:3,
    titulo_linha1:'Vista a sua', titulo_linha2:'melhor versão.',
@@ -52,9 +53,31 @@
    }
    applyLogo(t.logo_caminho);
    setCache(t.logo_caminho);
+   try {
+     if(validPath(t.banner_caminho,'banner'))
+       localStorage.setItem(BANNER_CACHE_KEY,t.banner_caminho);
+     else
+       localStorage.removeItem(BANNER_CACHE_KEY);
+   } catch(_) {}
    const banner=$('tema-banner'),bannerURL=photo(t.banner_caminho,'banner');
    if(banner){banner.src=bannerURL||'assets/hero.svg';banner.onerror=()=>{banner.onerror=null;banner.src='assets/hero.svg';};}
  }
+ function restoreBanner(){
+   const banner=$('tema-banner');
+   if(!banner)return;
+   try {
+     const path=localStorage.getItem(BANNER_CACHE_KEY);
+     const url=photo(path,'banner');
+     if(url){
+       banner.src=url;
+       banner.onerror=()=>{
+         banner.onerror=null;
+         banner.src='assets/hero.svg';
+       };
+     }
+   } catch(_) {}
+ }
+ restoreBanner();
  async function start(){
    const cached=getCache();if(cached)applyLogo(cached); // cache local evita aguardar consulta em novas paginas
    if(!validConfig){if(!cached)applyLogo(null);return;}
