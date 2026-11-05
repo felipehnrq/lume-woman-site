@@ -6,3 +6,12 @@ wrangler.jsonc
 .github/
 node_modules/
 **/node_modules
+tests/
+supabase/
+test-results/
+playwright-report/
+package.json
+package-lock.json
+playwright.config.cjs
+REVIEW.md
+.gitignore

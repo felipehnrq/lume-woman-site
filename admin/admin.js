@@ -12,7 +12,7 @@
 
   const $ = id => document.getElementById(id);
   const views = { boot: $('view-boot'), login: $('view-login'), panel: $('view-panel') };
-  const SCREENS = { '': 'inicio', '#produtos': 'produtos', '#vendas': 'vendas', '#estoque': 'estoque', '#fotografias': 'fotografias', '#personalizar': 'personalizar', '#entregas':'entregas' };
+  const SCREENS = { '': 'inicio', '#produtos': 'produtos', '#vendas': 'vendas', '#estoque': 'estoque', '#fotografias': 'fotografias', '#personalizar': 'personalizar', '#entregas':'entregas', '#pagamentos':'pagamentos' };
 
   let client = null;
 
