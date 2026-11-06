@@ -30,7 +30,7 @@ const user = {id:userId, email:'owner@example.test', role:'authenticated', aud:'
 
 async function setup(page, options = {}) {
   const state = {payments:{...defaults, ...options.payments}, writes:[], denySave:false, emptySave:false,
-    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, stockRows:structuredClone(options.stockRows || products), stockReads:[], failStock:false, stockGate:null};
+    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, sizes:structuredClone(sizes), failSizes:false, sizeReads:0, stockRows:structuredClone(options.stockRows || products), stockReads:[], failStock:false, stockGate:null};
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => {
@@ -83,7 +83,10 @@ async function setup(page, options = {}) {
     }
     if (table === 'produtos') return json(url.searchParams.has('id') ? [products[0]] : products);
     if (table === 'categorias') return json([{id:1,nome:'Casual',ordem:0,ativa:true}]);
-    if (table === 'produto_tamanhos') return json(sizes);
+    if (table === 'produto_tamanhos') {
+      state.sizeReads++;
+      return state.failSizes ? json({message:'Unavailable'},503) : json(state.sizes);
+    }
     if (table === 'produto_imagens') return json(photos);
     if (table === 'loja_tema') return json([{id:1,depoimentos:[]}]);
     if (table === 'vendas_manuais') return json([]);
@@ -103,6 +106,137 @@ async function login(page) {
   await page.locator('#login-submit').click();
   await expect(page.locator('#view-panel')).toBeVisible();
 }
+
+test('atualização leve retira tamanho, preserva carrinho e impede WhatsApp com tamanho indisponível', async ({page}) => {
+  const {state, errors} = await setup(page);
+  const requests=[];
+  page.on('request',r=>{if(r.url().includes('/rest/v1/produto_tamanhos'))requests.push(r);});
+  await page.clock.install();
+  await page.goto('/'); await addToCart(page);
+  state.sizes=state.sizes.filter(s=>s.tamanho!=='M');
+  await page.clock.fastForward(60000);
+  await expect(page.locator('#availability-status')).toContainText('atualizada');
+  await expect(page.locator('#cart-count')).toHaveText('1');
+  await page.locator('#checkout').click();
+  await expect(page.locator('#toast')).toContainText('não está mais disponível');
+  expect(await page.evaluate(()=>window.__opened)).toEqual([]);
+  expect(JSON.parse(await page.evaluate(()=>localStorage.getItem('lume_cart_v1')))).toEqual([{id:'LW-001',size:'M',qty:1}]);
+  expect(state.sizeReads).toBe(2);
+  for(const request of requests){
+    expect(request.method()).toBe('GET');
+    expect(new URL(request.url()).searchParams.get('select')).toBe('produto_id,tamanho,ordem');
+    expect(request.headers().authorization).toBeUndefined();
+  }
+  await page.locator('[data-remove="0"]').click();
+  await expect(page.locator('#cart-count')).toHaveText('0');
+  expect(errors).toEqual([]);
+});
+
+test('rede indisponível não significa saldo zero; retorno à aba atualiza com intervalo mínimo', async ({page}) => {
+  const {state}=await setup(page);
+  await page.clock.install(); await page.goto('/'); await addToCart(page);
+  state.failSizes=true;
+  await page.clock.fastForward(60000);
+  await expect(page.locator('#availability-status')).toContainText('Não foi possível');
+  await expect(page.locator('#cart-count')).toHaveText('1');
+  await page.locator('#close-cart').click();
+  await page.locator('[data-open="LW-001"]').click();
+  await expect(page.locator('[data-size="M"]')).toBeEnabled();
+  await page.locator('[data-size="M"]').click();
+  state.failSizes=false;
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+  expect(state.sizeReads).toBe(2);
+  await page.clock.fastForward(16000);
+  state.sizes=[];
+  await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+  await expect(page.locator('[data-size="M"]')).toBeDisabled();
+  await expect(page.locator('[data-size="G"]')).toBeDisabled();
+  await page.locator('#confirm-add').click();
+  await expect(page.locator('#toast')).toContainText('Selecione um tamanho');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-open="LW-001"]')).toHaveCount(0);
+  await expect(page.locator('#cart-count')).toHaveText('1');
+});
+
+test('aba oculta não consulta; atualizações não se sobrepõem e dados inválidos são descartados', async ({page}) => {
+  const {state}=await setup(page);
+  await page.clock.install(); await page.goto('/');
+  await expect(page.locator('.product-card')).toHaveCount(2);
+  await page.evaluate(()=>Object.defineProperty(document,'hidden',{configurable:true,value:true}));
+  await page.clock.fastForward(120000);
+  expect(state.sizeReads).toBe(1);
+  await page.evaluate(()=>{window.LUME_REFRESH_SIZES=()=>new Promise(resolve=>{window.__resolveSizes=resolve;window.__refreshCalls=(window.__refreshCalls||0)+1;});Object.defineProperty(document,'hidden',{configurable:true,value:false});document.dispatchEvent(new Event('visibilitychange'));});
+  await page.clock.fastForward(120000);
+  expect(await page.evaluate(()=>window.__refreshCalls)).toBe(1);
+  await page.evaluate(()=>window.__resolveSizes([{unexpected:true}]));
+  await expect(page.locator('#availability-status')).toContainText('Não foi possível');
+  await page.locator('[data-open="LW-001"]').click();
+  await expect(page.locator('[data-size="M"]')).toBeEnabled();
+});
+
+test('consulta pública pagina tamanhos sem ler quantidade nem aceitar resposta parcial', async ({page}) => {
+  await setup(page);
+  await page.goto('/');
+  await expect(page.locator('.product-card')).toHaveCount(2);
+  const offsets=[];
+  let failSecond=false;
+  await page.route('**/rest/v1/produto_tamanhos?*',route=>{
+    const url=new URL(route.request().url());
+    expect(url.searchParams.get('select')).toBe('produto_id,tamanho,ordem');
+    const offset=url.searchParams.get('offset');offsets.push(offset);
+    if(offset==='500'&&failSecond)return route.fulfill({status:503,body:'Unavailable'});
+    const rows=offset==='0'?Array.from({length:500},(_,i)=>({produto_id:'another-'+i,tamanho:'P',ordem:0})):sizes;
+    return route.fulfill({contentType:'application/json',body:JSON.stringify(rows)});
+  });
+  const rows=await page.evaluate(()=>window.LUME_REFRESH_SIZES());
+  expect(rows).toHaveLength(502);
+  expect(offsets).toEqual(['0','500']);
+  failSecond=true;
+  expect(await page.evaluate(()=>window.LUME_REFRESH_SIZES().then(()=>false,()=>true))).toBe(true);
+});
+
+test('menu mobile por teclado, largura e movimento reduzido', async ({page}) => {
+  await setup(page);
+  await page.setViewportSize({width:320,height:568});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.goto('/');
+  await expect(page.locator('.product-card')).toHaveCount(2);
+  const menu=page.locator('#menu-toggle'),nav=page.locator('#primary-nav');
+  await expect(nav).toBeHidden();
+  await menu.focus();await menu.press('Enter');
+  await expect(menu).toHaveAttribute('aria-expanded','true');
+  await expect(nav).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(nav).toBeHidden();await expect(menu).toBeFocused();
+  await menu.click();await nav.locator('a').first().click();
+  await expect(nav).toBeHidden();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior','auto');
+  await expect(page.locator('.hero-copy')).toHaveCSS('animation-name','none');
+  await page.locator('#search').fill('Vestido');
+  await expect(page.locator('.product-card')).toHaveCount(1);
+  await expect(page.locator('.product-card')).toBeVisible();
+  await page.setViewportSize({width:1440,height:900});
+  await expect(nav).toBeVisible();await expect(menu).toBeHidden();
+});
+
+test('tema administrativo e enquadramento continuam prevalecendo no editorial', async ({page}) => {
+  await setup(page);
+  await page.route('**/rest/v1/loja_tema?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify([{
+    cor_destaque:'#804030',cor_fundo:'#faf5ee',cor_texto:'#302520',fonte:'moderno',grade:4,
+    titulo_linha1:'Título editado',titulo_linha2:'No painel',subtitulo:'Descrição editada',chamada:'Chamada editada',
+    banner_zoom:125,banner_x:20,banner_y:65,depoimentos:[]
+  }])}));
+  await page.setViewportSize({width:1440,height:900});
+  await page.goto('/');
+  await expect(page.locator('#tema-titulo1')).toHaveText('Título editado');
+  await expect(page.locator('#tema-descricao')).toHaveText('Descrição editada');
+  await expect(page.locator('body')).toHaveClass(/tema-moderno/);
+  await expect(page.locator('#products')).toHaveClass(/tema-grade-4/);
+  await expect(page.locator('#tema-banner')).toHaveCSS('object-position','20% 65%');
+  await expect(page.locator('#tema-banner')).toHaveCSS('transform','matrix(1.25, 0, 0, 1.25, 0, 0)');
+  expect(await page.locator('html').evaluate(el=>el.style.getPropertyValue('--clay'))).toBe('#804030');
+});
 
 const stockFixture = () => [
   ...[0,1,2,3,4].map((qty,i) => ({
@@ -391,6 +525,13 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
     await page.setViewportSize(viewport);
     await page.goto('/');
     await expect(page.locator('.product-card')).toHaveCount(2);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    if(process.env.LUME_EVIDENCE_DIR){
+      await page.locator('#products').scrollIntoViewIfNeeded();
+      await expect.poll(()=>page.locator('.product-img-wrap img').first().evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+      await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+      await page.screenshot({path:path.join(process.env.LUME_EVIDENCE_DIR,'vitrine-'+viewport.width+'.png'),fullPage:true});
+    }
     const cardImage = page.locator('.product-img-wrap img').first();
     await expect(cardImage).toHaveCSS('object-fit','contain');
     await cardImage.hover();

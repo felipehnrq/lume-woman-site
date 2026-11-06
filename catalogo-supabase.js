@@ -15,7 +15,8 @@
     const response = await fetch(endpoint, {
       method: 'GET',
       headers: { apikey: key, Accept: 'application/json' },
-      cache: 'no-store'
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10000)
     });
     if (!response.ok) {
       // Nunca expor tokens, detalhes SQL ou credenciais na tela pública.
@@ -60,7 +61,7 @@
     return products.map(p => {
       const imagens = photosByProduct.get(p.id) || [];
       return {
-        id:String(p.codigo || p.id), nome:String(p.nome || ''),
+        id:String(p.codigo || p.id), publicId:String(p.id), nome:String(p.nome || ''),
         categoria:categoriesById.get(String(p.categoria_id)) || 'Coleção',
         preco:Number(p.preco), destaque:String(p.destaque || ''),
         descricao:String(p.descricao || ''), etiqueta:String(p.etiqueta || ''),
@@ -71,5 +72,19 @@
       };
     }).filter(p=>p.nome && Number.isFinite(p.preco) && p.preco>=0);
   }
+  // Reutiliza exclusivamente as colunas públicas existentes. Nunca consulta estoque.
+  window.LUME_REFRESH_SIZES = async () => {
+    const rows = [];
+    // Paginação evita interpretar o limite da Data API como tamanhos removidos.
+    for (let offset = 0; ; offset += 500) {
+      const page = await read('produto_tamanhos', {
+        select:'produto_id,tamanho,ordem', order:'produto_id.asc,ordem.asc,tamanho.asc',
+        limit:'500', offset:String(offset)
+      });
+      rows.push(...page);
+      if (page.length < 500) return rows;
+      if (offset >= 49500) throw new Error('Catálogo excede o limite de atualização.');
+    }
+  };
   window.LUME_CATALOG_READY = loadCatalog().then(data => ({data}), error => ({error}));
 })();
