@@ -12,6 +12,66 @@
   let items = [], cart = [], activeFilter='Todas', search='', chosen=null, chosenSize=null;
   let ready=false, loadFailed=false, toastTimer;
   const products = $('products');
+  // Menu progressivo: sem JS os links continuam visíveis no celular.
+  const menu = $('menu-toggle'), nav = $('primary-nav');
+  const mobile = window.matchMedia('(max-width:700px)');
+  function closeMenu() { menu.setAttribute('aria-expanded','false'); nav.hidden=mobile.matches; }
+  menu.hidden=false;
+  closeMenu();
+  mobile.addEventListener('change',closeMenu);
+  menu.addEventListener('click',()=>{
+    const expanded=menu.getAttribute('aria-expanded')==='true';
+    menu.setAttribute('aria-expanded',String(!expanded));nav.hidden=expanded;
+  });
+  nav.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu();});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&menu.getAttribute('aria-expanded')==='true'){closeMenu();menu.focus();}
+  });
+  document.addEventListener('click',e=>{
+    if(!e.target.closest('.site-header')&&menu.getAttribute('aria-expanded')==='true')closeMenu();
+  });
+  let refreshing=false, lastRefresh=Date.now();
+  async function refreshAvailability() {
+    if(!ready || document.hidden || refreshing || Date.now()-lastRefresh<15000 || !window.LUME_REFRESH_SIZES)return;
+    refreshing=true;lastRefresh=Date.now();
+    try {
+      const rows=await window.LUME_REFRESH_SIZES();
+      // Uma resposta inválida não pode apagar disponibilidade conhecida.
+      if(!Array.isArray(rows)||rows.some(r=>!r||typeof r.produto_id!=='string'||typeof r.tamanho!=='string'))
+        throw new Error('Disponibilidade inválida');
+      const byProduct=new Map();
+      for(const row of rows){
+        if(!byProduct.has(row.produto_id))byProduct.set(row.produto_id,[]);
+        byProduct.get(row.produto_id).push(row.tamanho);
+      }
+      let changed=false;
+      for(const p of items){
+        const sizes=byProduct.get(p.publicId)||[];
+        if(JSON.stringify(sizes)!==JSON.stringify(p.tamanhos)){p.tamanhos=sizes;changed=true;}
+      }
+      if(changed){
+        renderProducts();
+        if(chosen){
+          chosen=product(chosen.id);
+          if(!chosen.tamanhos.includes(chosenSize))chosenSize=null;
+          document.querySelectorAll('.size-option').forEach(b=>{
+            b.disabled=!chosen.tamanhos.includes(b.dataset.size);
+            const active=b.dataset.size===chosenSize;
+            b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+          });
+        }
+      }
+      const note=$('availability-status');
+      if(note)note.textContent='Disponibilidade atualizada. A loja confirma o saldo antes de fechar o pedido.';
+    } catch(_) {
+      // Falha de rede não é saldo zero: mantém catálogo, carrinho e escolhas.
+      const note=$('availability-status');
+      if(note)note.textContent='Não foi possível atualizar a disponibilidade. Confirme os tamanhos com a loja.';
+    } finally {refreshing=false;}
+  }
+  setInterval(refreshAvailability,60000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshAvailability();});
+  window.addEventListener('pageshow',e=>{if(e.persisted)refreshAvailability();});
 
   function toast(message) {
     const t=$('toast'); t.textContent=message; t.classList.add('show');
@@ -82,11 +142,14 @@
       <div class="detail-price">${brl(p.preco)}</div><p class="detail-sub">${esc(intro)}</p>
       <p class="size-label">Escolha seu tamanho:</p><div class="size-options" role="group" aria-label="Tamanho">
       ${p.tamanhos.map(size=>`<button type="button" class="size-option" data-size="${esc(size)}" aria-pressed="false">${esc(size)}</button>`).join('')}
-      </div><button class="btn-primary" type="button" id="confirm-add">Adicionar ao carrinho <span aria-hidden="true">+</span></button></div></div>`;
+      </div><p class="availability-note">Disponibilidade por tamanho sujeita à confirmação da loja. Adicionar ao carrinho não reserva a peça.</p><button class="btn-primary" type="button" id="confirm-add">Adicionar ao carrinho <span aria-hidden="true">+</span></button></div></div>`;
     $('product-backdrop').hidden=false;$('product-dialog').classList.add('open');$('product-dialog').setAttribute('aria-hidden','false');lock();$('close-product').focus();
   }
   function add() {
     if(!chosen||!chosenSize){toast('Selecione um tamanho antes de continuar.');return;}
+    if(!product(chosen.id)?.tamanhos.includes(chosenSize)){
+      toast('Este tamanho não está mais disponível. Escolha outro tamanho.');return;
+    }
     const current=cart.find(x=>x.id===chosen.id&&x.size===chosenSize);
     if(current)current.qty=Math.min(99,current.qty+1);
     else cart.push({id:chosen.id,size:chosenSize,qty:1});
@@ -103,6 +166,11 @@
   }
   function checkout(){
     if(!cart.length||!ready)return;
+    const unavailable=cart.find(line=>!product(line.id)?.tamanhos.includes(line.size));
+    if(unavailable){
+      toast('Um tamanho do carrinho não está mais disponível. Revise os itens ou fale com a loja.');
+      return;
+    }
     if(!window.LumeEntregas?.isReady?.()){toast('As formas de entrega não foram carregadas. Atualize a loja para tentar novamente.');return;}
     const delivery=window.LumeEntregas?.getPedido?.();
     if(!delivery||!delivery.ok){
@@ -144,7 +212,7 @@
   });
   document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
     activeFilter=btn.dataset.filter;
-    document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));
+    document.querySelectorAll('[data-filter]').forEach(x=>{x.classList.toggle('active',x===btn);x.setAttribute('aria-pressed',String(x===btn));});
     if(ready)renderProducts();
   }));
   $('search').addEventListener('input',e=>{search=e.target.value;if(ready)renderProducts()});

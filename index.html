@@ -12,15 +12,16 @@
   <link rel="stylesheet" href="marca.css"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&amp;display=swap" media="print" onload="this.media='all'"/>
 </head>
 <body>
+  <a class="skip-link" href="#colecao">Ir para a coleção</a>
   <div class="demo-alert"><span class="sparkle">✳</span> AMBIENTE DE TESTES <span class="bullet">•</span> Catálogo vinculado ao Supabase <span class="bullet">•</span> WhatsApp de testes habilitado</div>
   <div class="announcement">Seja bem-vinda à sua nova forma de escolher <span>♡</span> <span class="announcement-alt" id="tema-chamada">Looks para acompanhar você em todos os momentos.</span></div>
   <header class="site-header">
     <div class="header-inner page-width">
       <a href="#inicio" class="logo" aria-label="Lume Woman, início"><span class="logo-fallback" data-theme-logo-fallback><span class="lume-wordmark" aria-hidden="true"><span class="lume-wordmark-script">Lume<span class="lume-wordmark-star">✳</span></span><span class="lume-wordmark-sub">WOMAN</span></span></span><img class="logo-custom" id="tema-logo" data-theme-logo alt="Lume Woman" hidden/></a>
-      <nav class="nav-desktop" aria-label="Navegação principal">
+      <nav class="nav-desktop" id="primary-nav" aria-label="Navegação principal">
         <a href="#colecao">Coleção</a><a href="#como-funciona">Como comprar</a><a href="#sobre">Sobre a Lume</a>
       </nav>
-      <div class="header-actions"><button type="button" class="text-btn desktop-contact" id="contact-top">Fale com a loja <span aria-hidden="true">↗</span></button><button type="button" class="cart-toggle" id="open-cart" aria-label="Abrir carrinho"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span id="cart-count" class="cart-count">0</span></button></div>
+      <div class="header-actions"><button class="menu-toggle" id="menu-toggle" type="button" aria-controls="primary-nav" aria-expanded="false" hidden>Menu <span aria-hidden="true">☰</span></button><button type="button" class="text-btn desktop-contact" id="contact-top">Fale com a loja <span aria-hidden="true">↗</span></button><button type="button" class="cart-toggle" id="open-cart" aria-label="Abrir carrinho"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span id="cart-count" class="cart-count">0</span></button></div>
     </div>
   </header>
   <main id="inicio">
@@ -32,16 +33,17 @@
         <div class="hero-buttons"><a class="btn-primary" href="#colecao">Ver a coleção <span aria-hidden="true">↗</span></a><a class="btn-link" href="#como-funciona">Como funciona <span aria-hidden="true">→</span></a></div>
 
       </div>
-      <div class="hero-art"><img id="tema-banner" src="assets/hero.svg" alt="Ilustração de moda feminina em tons neutros"/><span class="hero-art-label">CURADORIA LUME <span>•</span> CASUAL & SOCIAL</span></div>
+      <div class="hero-art"><img id="tema-banner" src="assets/hero.svg" alt="Curadoria de moda feminina Lume Woman" fetchpriority="high"/><span class="hero-art-label">CURADORIA LUME <span>•</span> CASUAL & SOCIAL</span></div>
 
     </section>
     <section class="value-strip" aria-label="Vantagens"><div class="page-width value-items"><span>✧ &nbsp; Peças escolhidas com atenção</span><span>✧ &nbsp; Pedido direto pelo WhatsApp</span><span>✧ &nbsp; Atendimento próximo com a Dayane</span></div></section>
     <section id="como-funciona" class="how-section"><div class="page-width how-grid"><div class="how-heading"><p class="eyebrow">COMO COMPRAR NA LUME</p><h2>Escolha aqui.<br/><em>Combine pelo WhatsApp.</em></h2><p>Seu pedido vai prontinho para a conversa. A equipe confirma o estoque, a entrega e o pagamento.</p></div><div class="steps"><div class="step"><span>01</span><div><h3>Encontre sua peça</h3><p>Explore a coleção, escolha o tamanho e adicione ao carrinho.</p></div></div><div class="step"><span>02</span><div><h3>Revise seu carrinho</h3><p data-payment-shopping>Confira itens e quantidades, selecione a entrega e escolha uma forma de pagamento disponível.</p></div></div><div class="step"><span>03</span><div><h3>Envie pelo WhatsApp</h3><p>O pedido será preparado em uma mensagem. É só enviar para a loja confirmar tudo.</p></div></div></div></div></section>
     <section id="colecao" class="collection page-width">
       <div class="section-heading"><div><p class="eyebrow">ESCOLHAS QUE COMBINAM COM VOCÊ</p><h2>A sua próxima peça favorita</h2></div><p class="section-caption">Do básico elegante ao look que transforma o dia.</p></div>
-      <div class="collection-tools"><div class="filters" role="group" aria-label="Filtrar por categoria"><button type="button" class="filter active" data-filter="Todas">Todas as peças</button><button type="button" class="filter" data-filter="Casual">Casual</button><button type="button" class="filter" data-filter="Social">Moda social</button></div><div class="search-holder"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="search" placeholder="Buscar uma peça" aria-label="Buscar produtos"/></div></div>
+      <div class="collection-tools"><div class="filters" role="group" aria-label="Filtrar por categoria"><button type="button" class="filter active" data-filter="Todas" aria-pressed="true">Todas as peças</button><button type="button" class="filter" data-filter="Casual" aria-pressed="false">Casual</button><button type="button" class="filter" data-filter="Social" aria-pressed="false">Moda social</button></div><div class="search-holder"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input type="search" id="search" placeholder="Buscar uma peça" aria-label="Buscar produtos"/></div></div>
       <p id="results-count" class="results-count" aria-live="polite"></p>
       <div id="products" class="product-grid"></div>
+      <p class="catalog-note" id="availability-status" role="status">Disponibilidade por tamanho sujeita à confirmação da loja. O carrinho não reserva peças.</p>
       <div class="collection-footer"><p>Encontrou o seu estilo? Monte seu carrinho e converse com a loja para confirmar disponibilidade e entrega.</p><button type="button" class="btn-outline" id="collection-cart">Ver meu carrinho <span aria-hidden="true">↗</span></button></div>
     </section>
     <section id="depoimentos" class="social-section page-width" hidden><div class="section-heading"><div><p class="eyebrow">EXPERIÊNCIAS REAIS</p><h2>Quem veste Lume, compartilha</h2></div></div><div id="tema-depoimentos" class="social-grid"></div></section>
