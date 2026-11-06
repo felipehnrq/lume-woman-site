@@ -267,3 +267,52 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 #tema-preview-logo-text .lume-wordmark-sub{font-size:8px;}
 
 #tema-form input[type=range]{width:100%;accent-color:#b67b68} .v106-depoimento{padding:15px;border:1px solid #e2d8d2;border-radius:10px;margin:12px 0}.v106-depoimento .field{margin:9px 0}#tema-preview-banner-img{object-fit:cover;object-position:var(--preview-x,50%) var(--preview-y,50%);transform:scale(var(--preview-zoom,1));transform-origin:var(--preview-x,50%) var(--preview-y,50%)}.tema-preview-row{overflow:hidden}
+
+/* Central de consulta de estoque — somente no painel. */
+.stock-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:24px 0 12px}
+.stock-summary>div{padding:18px;border:1px solid var(--line);background:var(--cream);min-width:0}
+.stock-summary dt{font-size:13px;line-height:1.5}
+.stock-summary dd{margin:8px 0 0;font-size:30px;font-weight:700}
+.stock-tools{display:flex;flex-wrap:wrap;gap:20px;align-items:end;margin:24px 0 12px}
+.stock-filters{display:flex;flex-wrap:wrap;gap:8px}
+.stock-filters button,#stock-reload,.stock-edit{min-height:44px}
+.stock-filters button.active{background:var(--ink);color:var(--paper)}
+.stock-search{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700;flex:1;min-width:200px}
+.stock-search input{width:100%;min-height:44px;padding:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:16px}
+.stock-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.stock-card{border:1px solid var(--line);padding:20px;background:#fff;min-width:0;overflow-wrap:anywhere}
+.stock-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.stock-name{font:400 24px/1.3 Georgia,serif;margin:16px 0 10px}
+.stock-total{font-size:14px;line-height:1.8}
+.stock-state{display:inline-block;padding:2px 8px;font-size:12px;font-weight:700;border-radius:4px}
+.stock-disponivel{background:#edf3ed;color:#285035}
+.stock-baixo{background:#fff2d7;color:#704605}
+.stock-esgotado{background:#fae9e4;color:#862f22}
+.stock-sizes{list-style:none;padding:0;margin:16px 0;display:flex;gap:8px;flex-wrap:wrap}
+.stock-size{padding:8px 10px;display:flex;flex-direction:column;gap:3px;border:1px solid currentColor;border-radius:4px;font-size:12px}
+.stock-size strong{font-size:14px}
+.stock-edit{display:inline-flex;align-items:center;margin-top:8px}
+#stock-status,#stock-results{font-size:13px;line-height:1.6}
+@media(max-width:700px){.stock-summary{grid-template-columns:1fr;gap:8px}.stock-summary>div{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px}.stock-summary dd{margin:0}.stock-list{grid-template-columns:1fr}.stock-card{padding:16px}.stock-search{min-width:0;width:100%;flex-basis:100%}.stock-filters{width:100%}.stock-filters button{flex:1;padding:10px 8px}}
+
+/* Oito destinos em duas linhas: rótulos legíveis sem esconder seções. */
+@media(max-width:700px){
+  html{scroll-padding-top:80px;scroll-padding-bottom:150px}
+  .panel-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:0 4px env(safe-area-inset-bottom,0px);gap:0}
+  .panel-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58px;min-width:0;padding:6px 3px;font-size:11px;line-height:1.4;color:#5c514a;white-space:normal;text-align:center}
+  .panel-nav a span{font-size:17px;line-height:1.2;margin:0 0 4px}
+  .panel-nav a:focus-visible{outline-offset:-3px}
+  .panel-main{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
+}
+.stock-refresh{display:flex;align-items:center;flex-wrap:wrap;gap:12px 20px}
+#stock-updated{margin:0;font-size:13px;line-height:1.6;color:var(--ink)}
+.stock-overall{font-size:14px;line-height:1.8;margin:12px 0 6px}
+.stock-total{margin:6px 0 12px}
+.stock-sem-tamanhos{background:#eeecf5;color:#49415d}
+.stock-filters{flex:1 1 100%}
+@media(max-width:700px){
+  .stock-summary{grid-template-columns:1fr}
+  .stock-refresh{align-items:flex-start;flex-direction:column;gap:8px}
+  .stock-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .stock-filters button{min-width:0;line-height:1.5}
+}
