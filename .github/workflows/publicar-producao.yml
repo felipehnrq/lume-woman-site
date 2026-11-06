@@ -2,17 +2,43 @@
 name: Publicar Lume Woman em producao
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Serializa publicações sem interromper um envio já iniciado.
+concurrency:
+  group: cloudflare-lumewoman-producao
+  cancel-in-progress: false
+
 jobs:
   publicar:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Obter arquivos
         uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Instalar Chromium e dependências do sistema
+        run: npx playwright install --with-deps chromium
+
+      - name: Configurar caminho do Chromium
+        run: node -e 'console.log("CHROMIUM_PATH=" + require("@playwright/test").chromium.executablePath())' >> "$GITHUB_ENV"
+
+      - name: Executar testes Node.js e Playwright
+        run: npm test
 
       - name: Preparar arquivos da loja
         run: |
@@ -34,7 +60,20 @@ jobs:
           sed -i 's|<p class="small-note"><strong>Modo de testes:</strong> a mensagem ao WhatsApp será identificada como TESTE e não deve ser tratada como pedido real.</p>||' site/index.html
 
 
+      # Uma execução antiga pode sair da fila depois de uma mais recente.
+      - name: Verificar se o commit ainda é o atual da main
+        id: atual
+        run: |
+          git fetch --no-tags origin main
+          if [ "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA" ]; then
+            echo "publicar=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publicar=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Publicação ignorada: main já possui outro commit."
+          fi
+
       - name: Publicar no Cloudflare
+        if: steps.atual.outputs.publicar == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PROD_API_TOKEN }}
