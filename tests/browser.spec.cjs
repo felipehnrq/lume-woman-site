@@ -30,7 +30,7 @@ const user = {id:userId, email:'owner@example.test', role:'authenticated', aud:'
 
 async function setup(page, options = {}) {
   const state = {payments:{...defaults, ...options.payments}, writes:[], denySave:false, emptySave:false,
-    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, sizes:structuredClone(sizes), failSizes:false, sizeReads:0};
+    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, sizes:structuredClone(sizes), failSizes:false, sizeReads:0, stockRows:structuredClone(options.stockRows || products), stockReads:[], failStock:false, stockGate:null};
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => {
@@ -72,6 +72,15 @@ async function setup(page, options = {}) {
     }
     if (table === 'loja_entregas') return state.failDelivery ? json({message:'Unavailable'},503) : json([delivery]);
     if (table === 'admin_users') return json(state.admin ? [{user_id:userId, nome:'Administradora'}] : []);
+    if (table === 'produtos' && url.searchParams.get('select') === 'id,codigo,nome,publicado,produto_tamanhos(tamanho,estoque,ordem)') {
+      const offset=Number(url.searchParams.get('offset')||0), limit=Number(url.searchParams.get('limit')||200);
+      state.stockReads.push({offset,limit,method:request.method(),authorization:request.headers().authorization});
+      const rows=structuredClone(state.stockRows.slice(offset,offset+limit));
+      if(state.stockGate)await state.stockGate;
+      if(state.failStock==='network')return route.abort('internetdisconnected');
+      if(state.failStock || offset===state.failStockOffset)return json({message:'Unavailable'},503);
+      return json(rows);
+    }
     if (table === 'produtos') return json(url.searchParams.has('id') ? [products[0]] : products);
     if (table === 'categorias') return json([{id:1,nome:'Casual',ordem:0,ativa:true}]);
     if (table === 'produto_tamanhos') {
@@ -227,6 +236,287 @@ test('tema administrativo e enquadramento continuam prevalecendo no editorial', 
   await expect(page.locator('#tema-banner')).toHaveCSS('object-position','20% 65%');
   await expect(page.locator('#tema-banner')).toHaveCSS('transform','matrix(1.25, 0, 0, 1.25, 0, 0)');
   expect(await page.locator('html').evaluate(el=>el.style.getPropertyValue('--clay'))).toBe('#804030');
+});
+
+const stockFixture = () => [
+  ...[0,1,2,3,4].map((qty,i) => ({
+    id:'20000000-0000-0000-0000-'+String(i+1).padStart(12,'0'),
+    codigo:'ST-'+qty, nome:'Peça com '+qty+' unidades', publicado:qty%2===0,
+    produto_tamanhos:[{tamanho:'M',estoque:qty,ordem:0}]
+  })),
+  {id:'20000000-0000-0000-0000-000000000006',codigo:'ST-MIX',nome:'Tamanhos mistos',publicado:true,
+    produto_tamanhos:[{tamanho:'P',estoque:0,ordem:0},{tamanho:'G',estoque:4,ordem:2},{tamanho:'M',estoque:2,ordem:1}]},
+  {id:'20000000-0000-0000-0000-000000000007',codigo:'ST-NONE',nome:'Sem grade',publicado:false,produto_tamanhos:[]},
+  {id:'20000000-0000-0000-0000-000000000008',codigo:'ST-SUM',nome:'Soma dos tamanhos',publicado:true,
+    produto_tamanhos:[{tamanho:'P',estoque:2,ordem:0},{tamanho:'M',estoque:2,ordem:1}]}
+];
+const stockCard = (page,code) => page.locator('.stock-card').filter({has:page.locator('.prod-code',{hasText:new RegExp('^'+code+'$')})});
+
+test('central: sessão autenticada, resumo, totais por produto e situação de cada tamanho', async ({page}) => {
+  const {state,errors}=await setup(page,{stockRows:stockFixture()});
+  await page.goto('/admin/#estoque');
+  await expect(page.locator('#view-login')).toBeVisible();
+  expect(state.stockReads).toHaveLength(0);
+  await login(page);
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  await expect(page.locator('#stock-units')).toHaveText('20');
+  await expect(page.locator('#stock-low')).toHaveText('5');
+  await expect(page.locator('#stock-empty')).toHaveText('1');
+  await expect(page.locator('#stock-no-sizes')).toHaveText('1');
+  for(const [qty,status] of [[0,'Esgotado'],[1,'Disponível'],[2,'Disponível'],[3,'Disponível'],[4,'Disponível']]){
+    await expect(stockCard(page,'ST-'+qty).locator('.stock-state')).toHaveText(status);
+    await expect(stockCard(page,'ST-'+qty).locator('.stock-size')).toContainText('M: '+qty);
+  }
+  const mixed=stockCard(page,'ST-MIX');
+  await expect(mixed.locator('.stock-total')).toContainText('Total: 6 unidades');
+  await expect(mixed.locator('.stock-state')).toHaveText('Disponível');
+  await expect(mixed.locator('.stock-size')).toHaveText(['P: 0Esgotado','M: 2Estoque baixo','G: 4Disponível']);
+  await expect(stockCard(page,'ST-NONE')).toContainText('Sem tamanhos cadastrados');
+  await expect(stockCard(page,'ST-NONE').locator('.stock-state')).toHaveText('Sem tamanhos cadastrados');
+  await expect(stockCard(page,'ST-NONE').locator('.badge')).toHaveText('Desativado');
+  await expect(mixed.locator('.badge')).toHaveText('Publicado');
+  await expect(stockCard(page,'ST-SUM').locator('.stock-state')).toHaveText('Disponível');
+  expect(state.stockReads).toHaveLength(1);
+  expect(state.stockReads[0].method).toBe('GET');
+  expect(state.stockReads[0].authorization).toMatch(/^Bearer /);
+  expect(errors).toEqual([]);
+});
+
+test('central: busca, filtros acessíveis e edição pelo formulário existente sem gravar', async ({page}) => {
+  const {state}=await setup(page,{stockRows:stockFixture()});
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  await page.getByRole('button',{name:'Estoque baixo por tamanho',exact:true}).click();
+  await expect(page.locator('.stock-card')).toHaveCount(5);
+  await expect(page.getByRole('button',{name:'Estoque baixo por tamanho',exact:true})).toHaveAttribute('aria-pressed','true');
+  await page.locator('#stock-search').fill('ST-2');
+  await expect(page.locator('.stock-card')).toHaveCount(1);
+  await expect(page.locator('#stock-units')).toHaveText('20');
+  await page.locator('#stock-search').fill('não existe');
+  await expect(page.locator('#stock-list')).toContainText('Nenhum produto encontrado');
+  await page.locator('#stock-search').fill('');
+  await page.getByRole('button',{name:'Esgotados',exact:true}).click();
+  await expect(page.locator('.stock-card')).toHaveCount(1);
+  await expect(page.locator('.stock-state')).toHaveText('Esgotado');
+  await page.getByRole('button',{name:'Sem tamanhos',exact:true}).click();
+  await expect(page.locator('.stock-card')).toHaveCount(1);
+  await expect(page.locator('.stock-state')).toHaveText('Sem tamanhos cadastrados');
+  await page.getByRole('button',{name:'Disponíveis',exact:true}).click();
+  await expect(page.locator('.stock-card')).toHaveCount(6);
+  await page.getByRole('button',{name:'Todos os produtos',exact:true}).click();
+  await page.locator('#stock-search').fill('TAMANHOS MISTOS');
+  await expect(page.locator('.stock-card')).toHaveCount(1);
+  expect(state.stockReads).toHaveLength(1);
+  await page.locator('#stock-search').fill('');
+  expect(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).not.toContain('ST-MIX');
+  // Usa um ID já servido pelo mock da edição original.
+  await page.route('**/rest/v1/produtos?*id=eq.*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify([products[0]])}));
+  await stockCard(page,'ST-4').getByRole('link',{name:/Editar produto/}).click();
+  await expect(page.locator('#form-title')).toHaveText('Editar produto');
+  await expect(page.locator('#prod-form')).toBeVisible();
+  expect(state.writes).toEqual([]);
+  await page.locator('[data-nav="estoque"]').click();
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  expect(state.stockReads).toHaveLength(2);
+});
+
+test('central: visitante e conta sem autorização não consultam quantidades', async ({page}) => {
+  const {state}=await setup(page,{admin:false,stockRows:stockFixture()});
+  await page.goto('/admin/#estoque');
+  await expect(page.locator('#view-login')).toBeVisible();
+  await page.locator('#email').fill('owner@example.test');await page.locator('#password').fill('correct-password');
+  await page.locator('#login-submit').click();
+  await expect(page.locator('#login-message')).toContainText('não tem permissão');
+  await expect(page.locator('#view-panel')).toBeHidden();
+  expect(state.stockReads).toHaveLength(0);
+  await expect(page.locator('#stock-list')).toBeEmpty();
+});
+
+test('central: falha de rede, tentativa novamente e ausência de produtos', async ({page}) => {
+  const {state}=await setup(page,{stockRows:stockFixture()});state.failStock=true;
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  await expect(page.locator('#stock-content')).toBeHidden();
+  state.failStock='network';
+  await page.getByRole('button',{name:'Tentar novamente',exact:true}).click();
+  await expect.poll(()=>state.stockReads.length).toBe(2);
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  state.failStock=false;state.stockRows=[];
+  await page.getByRole('button',{name:'Tentar novamente',exact:true}).click();
+  await expect(page.locator('#stock-list')).toContainText('Nenhum produto cadastrado.');
+  await expect(page.locator('#stock-units')).toHaveText('0');
+  await expect(page.locator('#stock-empty')).toHaveText('0');
+  state.stockRows=[{...stockFixture()[0],produto_tamanhos:[{tamanho:'M',estoque:null}]}];
+  await page.locator('#stock-reload').click();
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  await expect(page.locator('#stock-content')).toBeHidden();
+});
+
+test('central: logout limpa interface e respostas antigas não voltam após novo login', async ({page}) => {
+  const {state}=await setup(page,{stockRows:stockFixture()});
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  await page.locator('#stock-search').fill('ST-4');
+  let release;
+  state.stockGate=new Promise(resolve=>{release=resolve;});
+  await page.locator('#stock-reload').click();
+  await expect.poll(()=>state.stockReads.length).toBe(2);
+  await page.locator('#logout').click();
+  await expect(page.locator('#view-login')).toBeVisible();
+  await expect(page.locator('#stock-list')).toBeEmpty();
+  await expect(page.locator('#stock-units')).toBeEmpty();
+  await expect(page.locator('#stock-search')).toHaveValue('');
+  await expect(page.locator('#stock-updated')).toBeEmpty();
+  await expect(page.locator('#stock-no-sizes')).toBeEmpty();
+  state.stockGate=null;state.stockRows=[];
+  await login(page);
+  await expect(page.locator('#stock-list')).toContainText('Nenhum produto cadastrado.');
+  release();
+  await expect(page.locator('.stock-card')).toHaveCount(0);
+  await expect(page.locator('#stock-units')).toHaveText('0');
+  const stored=await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}));
+  expect(stored).not.toContain('ST-4');
+});
+
+test('central: consulta única durante carregamento e paginação completa', async ({page}) => {
+  const rows=Array.from({length:201},(_,i)=>({...stockFixture()[4],id:'30000000-0000-0000-0000-'+String(i).padStart(12,'0'),codigo:'PG-'+i}));
+  const {state}=await setup(page,{stockRows:rows});
+  let release;state.stockGate=new Promise(resolve=>{release=resolve;});
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('#stock-status')).toContainText('Carregando');
+  await expect(page.locator('#stock-reload')).toBeDisabled();
+  await expect(page.locator('#stock-updated')).toBeEmpty();
+  await page.evaluate(()=>window.dispatchEvent(new HashChangeEvent('hashchange')));
+  expect(state.stockReads).toHaveLength(1);
+  state.stockGate=null;release();
+  await expect(page.locator('.stock-card')).toHaveCount(201);
+  expect(state.stockReads.map(r=>r.offset)).toEqual([0,200]);
+  await expect(page.locator('#stock-units')).toHaveText('804');
+});
+
+test('central: falha na segunda página não apresenta resumo ou listagem parcial', async ({page}) => {
+  const rows=Array.from({length:201},(_,i)=>({...stockFixture()[4],id:'30000000-0000-0000-0000-'+String(i).padStart(12,'0'),codigo:'PG-'+i}));
+  const {state}=await setup(page,{stockRows:rows});state.failStockOffset=200;
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  await expect(page.locator('#stock-content')).toBeHidden();
+  await expect(page.locator('.stock-card')).toHaveCount(0);
+  expect(state.stockReads.map(r=>r.offset)).toEqual([0,200]);
+  state.failStockOffset=undefined;
+  await page.locator('#stock-reload').click();
+  await expect(page.locator('.stock-card')).toHaveCount(201);
+  await expect(page.locator('#stock-units')).toHaveText('804');
+});
+
+test.describe('horário do navegador', () => {
+  test.use({timezoneId:'America/Sao_Paulo'});
+
+test('central: horário local muda só após consulta completa, é preservado no erro e limpo no logout', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'reduce'});
+  const {state}=await setup(page,{stockRows:stockFixture()});
+  await page.clock.install({time:new Date('2026-11-06T17:32:00Z')});
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  const expected=await page.evaluate(()=>'Última consulta concluída às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'.');
+  expect(expected).toBe('Última consulta concluída às 14:32.');
+  await expect(page.locator('#stock-updated')).toHaveText(expected);
+  state.failStock=true;
+  await page.clock.setSystemTime(new Date('2026-11-06T17:45:00Z'));
+  await page.locator('#stock-reload').click();
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  await expect(page.locator('#stock-updated')).toHaveText(expected);
+  await expect(page.locator('#stock-content')).toBeHidden();
+  // O horário anterior também deve sobreviver a uma falha de página posterior.
+  state.failStock=false;
+  state.stockRows=Array.from({length:201},(_,i)=>({...stockFixture()[4],id:'30000000-0000-0000-0000-'+String(i).padStart(12,'0'),codigo:'PG-'+i}));
+  state.failStockOffset=200;
+  await page.locator('#stock-reload').click();
+  await expect(page.locator('#stock-status')).toContainText('Não foi possível');
+  await expect(page.locator('#stock-updated')).toHaveText(expected);
+  state.failStockOffset=undefined;
+  let release;state.stockGate=new Promise(resolve=>{release=resolve;});
+  await page.locator('#stock-reload').click();
+  await expect(page.locator('#stock-status')).toContainText('Carregando');
+  await expect(page.locator('#stock-updated')).toHaveText(expected);
+  state.stockGate=null;release();
+  await expect(page.locator('.stock-card')).toHaveCount(201);
+  const updated=await page.evaluate(()=>'Última consulta concluída às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'.');
+  await expect(page.locator('#stock-updated')).toHaveText(updated);
+  expect(updated).toBe('Última consulta concluída às 14:45.');
+  expect(updated).not.toBe(expected);
+  expect(await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}))).not.toContain('Última consulta');
+  await page.locator('#logout').click();
+  await expect(page.locator('#view-login')).toBeVisible();
+  await expect(page.locator('#stock-updated')).toBeEmpty();
+  await expect(page.locator('#stock-list')).toBeEmpty();
+});
+
+});
+
+for (const width of [320,375,390]) {
+  test('navegação administrativa acessível sem sobreposição em '+width+' px', async ({page}) => {
+    const {errors}=await setup(page,{stockRows:stockFixture()});
+    await page.setViewportSize({width,height:568});
+    await page.goto('/admin/#estoque');await login(page);
+    await expect(page.locator('.stock-card')).toHaveCount(8);
+    const links=page.locator('.panel-nav a');
+    await expect(links).toHaveCount(8);
+    const measurements=await links.evaluateAll(nodes=>nodes.map(node=>{
+      const bounds=node.getBoundingClientRect(),icon=node.querySelector('span').getBoundingClientRect();
+      const text=Array.from(node.childNodes).find(n=>n.nodeType===Node.TEXT_NODE&&n.textContent.trim());
+      const range=document.createRange();range.setStart(text,text.textContent.search(/\S/));range.setEnd(text,text.textContent.trimEnd().length);
+      return {box:{x:bounds.x,y:bounds.y,right:bounds.right,bottom:bounds.bottom,width:bounds.width,height:bounds.height},
+        icon:{x:icon.x,y:icon.y,right:icon.right,bottom:icon.bottom},font:parseFloat(getComputedStyle(node).fontSize),
+        labels:Array.from(range.getClientRects()).map(r=>({x:r.x,y:r.y,right:r.right,bottom:r.bottom}))};
+    }));
+    for(const measurement of measurements){
+      const {box,icon,labels,font}=measurement;
+      expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x).toBeGreaterThanOrEqual(0);expect(box.right).toBeLessThanOrEqual(width);
+      expect(font).toBeGreaterThanOrEqual(11);
+      for(const rect of [icon,...labels]){
+        expect(rect.x).toBeGreaterThanOrEqual(box.x-1);expect(rect.right).toBeLessThanOrEqual(box.right+1);
+        expect(rect.y).toBeGreaterThanOrEqual(box.y-1);expect(rect.bottom).toBeLessThanOrEqual(box.bottom+1);
+      }
+    }
+    for(let i=0;i<measurements.length;i++)for(let j=i+1;j<measurements.length;j++){
+      const a=measurements[i].box,b=measurements[j].box;
+      expect(Math.max(0,Math.min(a.right,b.right)-Math.max(a.x,b.x))*Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.y,b.y))).toBe(0);
+    }
+    for(const route of ['inicio','produtos','vendas','estoque','fotografias','personalizar','entregas','pagamentos']){
+      const link=page.locator('[data-nav="'+route+'"]');
+      await link.focus();await page.keyboard.press('Enter');
+      await expect(page.locator('[data-screen="'+route+'"]')).toBeVisible();
+      await expect(link).toHaveAttribute('aria-current','page');
+      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+test('central: texto seguro e layout mobile', async ({page}) => {
+  const rows=stockFixture();rows[0].nome='<img src=x onerror=alert(1)> Peça '+ 'longa '.repeat(15);
+  const {state}=await setup(page,{stockRows:rows});await page.setViewportSize({width:320,height:568});
+  await page.goto('/admin/#estoque');await login(page);
+  await expect(page.locator('.stock-card')).toHaveCount(8);
+  await expect(page.locator('.stock-card img')).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole('button',{name:'Estoque baixo por tamanho',exact:true}).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.stock-card')).toHaveCount(5);
+  if(process.env.LUME_STOCK_EVIDENCE_DIR){
+    state.stockRows=stockFixture();
+    await page.locator('#stock-reload').click();
+    await expect(page.locator('.stock-card')).toHaveCount(5);
+    await page.getByRole('button',{name:'Todos os produtos',exact:true}).click();
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await page.screenshot({path:path.join(process.env.LUME_STOCK_EVIDENCE_DIR,'estoque-mobile.png'),fullPage:false});
+    await stockCard(page,'ST-MIX').scrollIntoViewIfNeeded();
+    await page.screenshot({path:path.join(process.env.LUME_STOCK_EVIDENCE_DIR,'estoque-mobile-tamanhos.png'),fullPage:false});
+    await page.setViewportSize({width:1440,height:900});
+    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+    await page.screenshot({path:path.join(process.env.LUME_STOCK_EVIDENCE_DIR,'estoque-desktop.png'),fullPage:true});
+  }
 });
 
 for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:844,height:390}, {width:1440,height:900}]) {
