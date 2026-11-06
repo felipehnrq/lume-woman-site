@@ -233,8 +233,36 @@
 
       <section id="tela-estoque" data-screen="estoque" hidden>
         <p class="eyebrow"><span class="eyebrow-line"></span> ESTOQUE</p>
-        <h2>Estoque</h2>
-        <div class="soon"><strong>Uma tela só de estoque virá em uma etapa seguinte.</strong>Por enquanto, os tamanhos e as quantidades são alterados dentro de cada produto: Produtos → Editar.</div>
+        <h2>Central de Estoque</h2>
+        <p class="lead">Consulte as unidades por produto e tamanho. Para alterar quantidades, abra a edição do produto.</p>
+        <div class="stock-refresh">
+          <button id="stock-reload" type="button" class="btn-outline">Atualizar estoque</button>
+          <p id="stock-updated" role="status" aria-live="polite"></p>
+        </div>
+        <p id="stock-status" role="status" aria-live="polite"></p>
+        <div id="stock-content" hidden>
+          <dl class="stock-summary" aria-label="Resumo de todos os produtos cadastrados">
+            <div><dt>Total de unidades</dt><dd id="stock-units"></dd></div>
+            <div><dt>Produtos com tamanhos em baixa</dt><dd id="stock-low"></dd></div>
+            <div><dt>Produtos esgotados</dt><dd id="stock-empty"></dd></div>
+            <div><dt>Produtos sem tamanhos</dt><dd id="stock-no-sizes"></dd></div>
+          </dl>
+          <p class="hint">Situação geral: disponível quando há pelo menos uma unidade; esgotado quando todos os tamanhos cadastrados têm saldo zero; sem tamanhos quando não há grade. Alertas por tamanho: 1 a 3 unidades indicam estoque baixo. O resumo considera todos os produtos, independentemente dos filtros.</p>
+          <div class="stock-tools">
+            <div class="stock-filters" role="group" aria-label="Filtrar estoque">
+              <button type="button" class="btn-outline active" data-stock-filter="todos" aria-pressed="true">Todos os produtos</button>
+              <button type="button" class="btn-outline" data-stock-filter="baixo" aria-pressed="false">Estoque baixo por tamanho</button>
+              <button type="button" class="btn-outline" data-stock-filter="disponivel" aria-pressed="false">Disponíveis</button>
+              <button type="button" class="btn-outline" data-stock-filter="esgotado" aria-pressed="false">Esgotados</button>
+              <button type="button" class="btn-outline" data-stock-filter="sem-tamanhos" aria-pressed="false">Sem tamanhos</button>
+            </div>
+            <label class="stock-search" for="stock-search">Buscar por nome ou código
+              <input id="stock-search" type="search" autocomplete="off" placeholder="Nome ou código do produto"/>
+            </label>
+          </div>
+          <p id="stock-results" role="status"></p>
+          <div id="stock-list" class="stock-list"></div>
+        </div>
         <a class="back-link" href="#">← Voltar ao início</a>
       </section>
 
@@ -436,6 +464,7 @@
   <script src="entregas-admin.js"></script>
   <script src="../pagamentos.js"></script>
   <script src="pagamentos-admin.js"></script>
+  <script src="estoque.js"></script>
   <script src="admin.js"></script>
   <script src="vendas.js"></script>
   <script src="tema-logo-admin.js"></script><script src="vitrine-admin-v106.js"></script>
