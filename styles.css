@@ -217,3 +217,8 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
     transition:none!important;
   }
 }
+
+/* Respiro entre filtros, busca e divisória, incluindo sombras e foco. */
+.collection-tools{flex-wrap:wrap;row-gap:20px;padding-block:8px 20px}
+.filters{flex-wrap:wrap;gap:12px;overflow:visible;padding:6px}
+@media(min-width:701px){.search-holder{padding-bottom:0}}
