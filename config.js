@@ -8,8 +8,6 @@ window.LUME_CONFIG = {
   nome: 'Lume Woman',
   whatsapp: '5519983364406',
   modoTeste: true,
-  // Ativar somente após validar o registro imutável da primeira publicação.
-  novidadesPublicacaoConfiavel: false,
   instagram: '', // Definir quando a loja fornecer o endereço oficial.
   cidade: 'Entregas na região',
   mensagemBoasVindas: 'Olá! Vim pelo site da Lume Woman e gostaria de saber mais.'

@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {PGlite}=require('@electric-sql/pglite');
-const migration=fs.readFileSync(path.join(__dirname,'../docs/novidades/proposta/primeira-publicacao.sql'),'utf8');
+const migration=fs.readFileSync(path.join(__dirname,'../../docs/novidades/proposta/primeira-publicacao.sql'),'utf8');
 const admin='00000000-0000-0000-0000-000000000001';
 const common='00000000-0000-0000-0000-000000000002';
 async function fixture(){
@@ -168,8 +168,8 @@ test('reexecução e conflito de função abortam sem redefinir contrato existen
 
 test('scripts de inspeção e validação executam em READ ONLY sem alterar dados ou permissões',async()=>{
  const db=await fixture();
- const inspect=fs.readFileSync(path.join(__dirname,'../docs/novidades/proposta/inspecao-somente-leitura.sql'),'utf8');
- const validate=fs.readFileSync(path.join(__dirname,'../docs/novidades/proposta/validacao-pos-migracao.sql'),'utf8');
+ const inspect=fs.readFileSync(path.join(__dirname,'../../docs/novidades/proposta/inspecao-somente-leitura.sql'),'utf8');
+ const validate=fs.readFileSync(path.join(__dirname,'../../docs/novidades/proposta/validacao-pos-migracao.sql'),'utf8');
  const security=()=>db.query("select relrowsecurity,relacl::text from pg_class where oid='public.produtos'::regclass");
  try{
   const beforeData=(await db.query('select * from public.produtos order by id')).rows;

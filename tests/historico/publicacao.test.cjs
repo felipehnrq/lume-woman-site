@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {PGlite}=require('@electric-sql/pglite');
 test('proposta SQL registra primeira publicação, preserva republicação e não inventa histórico legado',async()=>{
- const sqlPath=path.join(__dirname,'../docs/novidades/proposta/primeira-publicacao.sql');
+ const sqlPath=path.join(__dirname,'../../docs/novidades/proposta/primeira-publicacao.sql');
  assert.ok(fs.existsSync(sqlPath),'proposta SQL deve existir');
  const db=await PGlite.create();
  try{
@@ -29,7 +29,7 @@ test('migração recusa tabela sem RLS e não deixa alteração parcial',async()
  const db=await PGlite.create();
  try{
   await db.exec('create table public.produtos(id text primary key, publicado boolean)');
-  await assert.rejects(db.exec(fs.readFileSync(path.join(__dirname,'../docs/novidades/proposta/primeira-publicacao.sql'),'utf8')),/RLS/);
+  await assert.rejects(db.exec(fs.readFileSync(path.join(__dirname,'../../docs/novidades/proposta/primeira-publicacao.sql'),'utf8')),/RLS/);
   await db.exec('rollback');
   assert.equal((await db.query("select count(*)::int as n from information_schema.columns where table_schema='public' and table_name='produtos' and column_name='first_published_at'")).rows[0].n,0);
  }finally{await db.close()}

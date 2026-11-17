@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const {PGlite}=require('@electric-sql/pglite');
-const migration=fs.readFileSync(path.join(__dirname,'../docs/novidades/proposta/primeira-publicacao.sql'),'utf8');
+const migration=fs.readFileSync(path.join(__dirname,'../../docs/novidades/proposta/primeira-publicacao.sql'),'utf8');
 test('coexistência com produtos_set_updated_at, RLS e grants de tabela informados',async()=>{
  const db=await PGlite.create();
  const rows=async sql=>(await db.query(sql)).rows;

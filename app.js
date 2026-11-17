@@ -113,13 +113,14 @@
     const section=$('new-arrivals'), grid=$('new-products'), button=$('all-new-arrivals');
     const focused=document.activeElement, hadFocus=section.contains(focused);
     const focusedProduct=grid.contains(focused) ? focused.dataset.open : null;
-    const news=cfg.novidadesPublicacaoConfiavel===true ? window.LumeCatalogPolicy.newProducts(items) : [];
+    const {newProducts,WEEK}=window.LumeCatalogPolicy;
+    const news=newProducts(items);
     section.hidden=!news.length;
     const markup=news.slice(0,showAllNew ? news.length : 4).map(productCard).join('');
     if(markup!==newsMarkup){grid.innerHTML=markup;newsMarkup=markup;}
     clearTimeout(newsTimer);
     if(news.length){
-      const expires=Math.min(...news.map(p=>Date.parse(p.first_published_at)+7*86400000));
+      const expires=Date.parse(news.at(-1).created_at)+WEEK;
       newsTimer=setTimeout(renderNewArrivals,Math.max(1,expires-Date.now()));
     }
     button.hidden=news.length<=4;

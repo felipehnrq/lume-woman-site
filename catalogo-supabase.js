@@ -65,14 +65,6 @@
       readAll('produto_tamanhos', { select:'produto_id,tamanho,ordem', order:'produto_id.asc,ordem.asc,tamanho.asc' }),
       readAll('produto_imagens', { select:'produto_id,caminho,ordem', order:'produto_id.asc,ordem.asc,id.asc' })
     ]);
-    // Coluna opcional: ausência de migração/permissão nunca derruba a coleção.
-    let publications=[];
-    if(window.LUME_CONFIG?.novidadesPublicacaoConfiavel===true){
-      try {
-        publications=await readAll('produtos',{select:'id,first_published_at',publicado:'eq.true',order:'id.asc'});
-      } catch(_) { /* Mantém datas desconhecidas, sem fallback para created_at. */ }
-    }
-    const firstById=new Map(publications.map(p=>[String(p.id),p.first_published_at]));
     const categoriesById = new Map(categories.map(c => [String(c.id), String(c.nome || '')]));
     const sizesByProduct = new Map();
     sizes.forEach(s => {
@@ -90,7 +82,7 @@
       const imagens = photosByProduct.get(p.id) || [];
       return {
         id:String(p.codigo || p.id), publicId:String(p.id), nome:String(p.nome || ''),
-        created_at:p.created_at ?? null, publicado:true, first_published_at:firstById.get(String(p.id)) ?? null,
+        created_at:p.created_at ?? null, publicado:true,
         categoria:categoriesById.get(String(p.categoria_id)) || 'Coleção',
         preco:Number(p.preco), destaque:String(p.destaque || ''),
         descricao:String(p.descricao || ''), etiqueta:String(p.etiqueta || ''),
