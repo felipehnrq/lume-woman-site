@@ -64,7 +64,11 @@
        localStorage.removeItem(BANNER_CACHE_KEY);
    } catch(_) {}
    const banner=$('tema-banner'),bannerURL=photo(t.banner_caminho,'banner');
-   if(banner){banner.src=bannerURL||'assets/hero.svg';banner.onerror=()=>{banner.onerror=null;banner.src='assets/hero.svg';};}
+   if(banner){
+     const next=bannerURL||'assets/hero.svg';
+     if(banner.getAttribute('src')!==next)banner.src=next;
+     banner.onerror=()=>{banner.onerror=null;banner.src='assets/hero.svg';};
+   }
  }
  function restoreBanner(){
    const banner=$('tema-banner');
