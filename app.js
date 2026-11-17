@@ -93,12 +93,8 @@
   function count(){return cart.reduce((sum,line)=>sum+line.qty,0)}
   function subtotal(){return cart.reduce((sum,line)=>sum+(product(line.id)?.preco||0)*line.qty,0)}
 
-  function renderProducts() {
-    const filtered=items.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
-      (p.nome+' '+p.categoria+' '+p.id).toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
-    $('results-count').textContent=`${filtered.length} ${filtered.length===1?'peça encontrada':'peças encontradas'}`;
-    if(!items.length){products.innerHTML='<div class="no-results">Ainda não há peças publicadas nesta coleção.</div>';return;}
-    products.innerHTML=filtered.length?filtered.map(p=>`
+  // Um único card e um único produto em memória para as duas vitrines.
+  function productCard(p) { return `
       <article class="product-card">
        <div class="product-img-wrap">
         <img src="${esc(p.imagem)}" alt="${esc(p.semFoto?'Foto em breve: '+p.nome:'Fotografia de '+p.nome)}" loading="lazy"/>
@@ -111,7 +107,44 @@
         <div class="product-topline"><h3 class="product-title">${esc(p.nome)}</h3><span class="product-price">${brl(p.preco)}</span></div>
         <p class="product-detail">${esc(p.destaque)}</p>
        </div>
-      </article>`).join('') : '<div class="no-results">Não encontramos peças com essa busca. Tente outra palavra.</div>';
+      </article>`; }
+  let showAllNew=false, newsTimer, newsMarkup='';
+  function renderNewArrivals() {
+    const section=$('new-arrivals'), grid=$('new-products'), button=$('all-new-arrivals');
+    const focused=document.activeElement, hadFocus=section.contains(focused);
+    const focusedProduct=grid.contains(focused) ? focused.dataset.open : null;
+    const news=cfg.novidadesPublicacaoConfiavel===true ? window.LumeCatalogPolicy.newProducts(items) : [];
+    section.hidden=!news.length;
+    const markup=news.slice(0,showAllNew ? news.length : 4).map(productCard).join('');
+    if(markup!==newsMarkup){grid.innerHTML=markup;newsMarkup=markup;}
+    clearTimeout(newsTimer);
+    if(news.length){
+      const expires=Math.min(...news.map(p=>Date.parse(p.first_published_at)+7*86400000));
+      newsTimer=setTimeout(renderNewArrivals,Math.max(1,expires-Date.now()));
+    }
+    button.hidden=news.length<=4;
+    button.setAttribute('aria-expanded',String(showAllNew));
+    button.textContent=showAllNew ? 'Mostrar menos novidades' : 'Ver todas as novidades';
+    if(hadFocus && (!focused.isConnected || section.hidden || (focused===button && button.hidden))){
+      const same=Array.from(grid.querySelectorAll('[data-open]')).find(b=>b.dataset.open===focusedProduct);
+      const target=section.hidden ? $('colecao').querySelector('h2') :
+        (same || grid.querySelector('[data-open]') || $('new-arrivals-title'));
+      target.setAttribute('tabindex',target.tagName==='BUTTON' ? '0' : '-1');
+      target.focus({preventScroll:true});
+    }
+  }
+  $('all-new-arrivals').addEventListener('click',()=>{showAllNew=!showAllNew;renderNewArrivals();});
+  // Expiração também funciona em páginas abertas e ao retornar de uma aba suspensa.
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderNewArrivals();});
+  window.addEventListener('pageshow',renderNewArrivals);
+
+  function renderProducts() {
+    renderNewArrivals();
+    const filtered=items.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
+      (p.nome+' '+p.categoria+' '+p.id).toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
+    $('results-count').textContent=`${filtered.length} ${filtered.length===1?'peça encontrada':'peças encontradas'}`;
+    if(!items.length){products.innerHTML='<div class="no-results">Ainda não há peças publicadas nesta coleção.</div>';return;}
+    products.innerHTML=filtered.length?filtered.map(productCard).join('') : '<div class="no-results">Não encontramos peças com essa busca. Tente outra palavra.</div>';
   }
   function renderCart() {
     $('cart-count').textContent=count();$('drawer-count').textContent=`(${count()})`;

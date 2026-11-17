@@ -10,11 +10,11 @@
   const key = String(settings.publishableKey || '');
   const bucket = 'Produtos'; // Respeitar maiúscula do bucket real.
 
-  async function read(table, params) {
+  async function read(table, params, withRange=false) {
     const endpoint = `${base}/rest/v1/${table}?${new URLSearchParams(params)}`;
     const response = await fetch(endpoint, {
       method: 'GET',
-      headers: { apikey: key, Accept: 'application/json' },
+      headers: { apikey: key, Accept: 'application/json', ...(withRange ? {Prefer:'count=exact'} : {}) },
       cache: 'no-store',
       signal: AbortSignal.timeout(10000)
     });
@@ -24,7 +24,27 @@
     }
     const data = await response.json();
     if (!Array.isArray(data)) throw new Error(`Formato de resposta inesperado: ${table}`);
-    return data;
+    if(!withRange)return data;
+    const match=/\/(\d+)$/.exec(response.headers?.get('content-range') || '');
+    return {data,total:match ? Number(match[1]) : null};
+  }
+
+  async function readAll(table, params) {
+    const rows=[];
+    let offset=0, expectedTotal=null;
+    while(offset<50000){
+      const {data:page,total}=await read(table,{...params,limit:'500',offset:String(offset)},true);
+      if(expectedTotal!==null && total!==null && total!==expectedTotal)throw new Error('Catálogo mudou durante a leitura.');
+      if(total!==null)expectedTotal=total;
+      rows.push(...page);offset+=page.length;
+      if(expectedTotal!==null && offset>=expectedTotal)return rows;
+      if(!page.length){
+        if(expectedTotal!==null && offset<expectedTotal)throw new Error('Resposta parcial do catálogo.');
+        return rows;
+      }
+      // Sem contagem, só página vazia comprova o fim; respeita limites menores da API.
+    }
+    throw new Error('Catálogo excede o limite de leitura.');
   }
 
   function photoUrl(path) {
@@ -40,11 +60,19 @@
     // A consulta de tamanhos pede apenas colunas públicas; NÃO pede estoque.
     // As políticas RLS filtrarão produtos desativados e tamanhos esgotados.
     const [products, categories, sizes, photos] = await Promise.all([
-      read('produtos', { select:'id,codigo,nome,preco,destaque,descricao,etiqueta,categoria_id', publicado:'eq.true', order:'created_at.desc' }),
-      read('categorias', { select:'id,nome', ativa:'eq.true' }),
-      read('produto_tamanhos', { select:'produto_id,tamanho,ordem', order:'ordem.asc' }),
-      read('produto_imagens', { select:'produto_id,caminho,ordem', order:'ordem.asc' })
+      readAll('produtos', { select:'id,codigo,nome,preco,destaque,descricao,etiqueta,categoria_id,created_at,publicado', publicado:'eq.true', order:'created_at.desc.nullslast,id.asc' }),
+      readAll('categorias', { select:'id,nome', ativa:'eq.true', order:'id.asc' }),
+      readAll('produto_tamanhos', { select:'produto_id,tamanho,ordem', order:'produto_id.asc,ordem.asc,tamanho.asc' }),
+      readAll('produto_imagens', { select:'produto_id,caminho,ordem', order:'produto_id.asc,ordem.asc,id.asc' })
     ]);
+    // Coluna opcional: ausência de migração/permissão nunca derruba a coleção.
+    let publications=[];
+    if(window.LUME_CONFIG?.novidadesPublicacaoConfiavel===true){
+      try {
+        publications=await readAll('produtos',{select:'id,first_published_at',publicado:'eq.true',order:'id.asc'});
+      } catch(_) { /* Mantém datas desconhecidas, sem fallback para created_at. */ }
+    }
+    const firstById=new Map(publications.map(p=>[String(p.id),p.first_published_at]));
     const categoriesById = new Map(categories.map(c => [String(c.id), String(c.nome || '')]));
     const sizesByProduct = new Map();
     sizes.forEach(s => {
@@ -58,10 +86,11 @@
       if (!photosByProduct.has(photo.produto_id)) photosByProduct.set(photo.produto_id, []);
       photosByProduct.get(photo.produto_id).push(url);
     });
-    return products.map(p => {
+    return window.LumeCatalogPolicy.sortProducts(products.filter(p=>p.publicado===true)).map(p => {
       const imagens = photosByProduct.get(p.id) || [];
       return {
         id:String(p.codigo || p.id), publicId:String(p.id), nome:String(p.nome || ''),
+        created_at:p.created_at ?? null, publicado:true, first_published_at:firstById.get(String(p.id)) ?? null,
         categoria:categoriesById.get(String(p.categoria_id)) || 'Coleção',
         preco:Number(p.preco), destaque:String(p.destaque || ''),
         descricao:String(p.descricao || ''), etiqueta:String(p.etiqueta || ''),
@@ -74,17 +103,9 @@
   }
   // Reutiliza exclusivamente as colunas públicas existentes. Nunca consulta estoque.
   window.LUME_REFRESH_SIZES = async () => {
-    const rows = [];
-    // Paginação evita interpretar o limite da Data API como tamanhos removidos.
-    for (let offset = 0; ; offset += 500) {
-      const page = await read('produto_tamanhos', {
-        select:'produto_id,tamanho,ordem', order:'produto_id.asc,ordem.asc,tamanho.asc',
-        limit:'500', offset:String(offset)
-      });
-      rows.push(...page);
-      if (page.length < 500) return rows;
-      if (offset >= 49500) throw new Error('Catálogo excede o limite de atualização.');
-    }
+    return readAll('produto_tamanhos',{
+      select:'produto_id,tamanho,ordem',order:'produto_id.asc,ordem.asc,tamanho.asc'
+    });
   };
   window.LUME_CATALOG_READY = loadCatalog().then(data => ({data}), error => ({error}));
 })();
