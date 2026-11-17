@@ -48,7 +48,7 @@ O workflow de produção dispara em push para main e workflow_dispatch, com cond
 
 Push/PR draft na feature não aciona os workflows inspecionados. Integrações externas de Cloudflare/GitHub não são auditáveis pela API disponível; não se promete ausência de gatilhos externos desconhecidos. Sem merge, deploy, mudança de secrets ou migração remota. Relógio do cliente controla a janela exibida; coerência depende do relógio correto. A leitura paginada não é transação: se a contagem mudar durante a leitura, o carregamento falha com possibilidade de recarregar, em vez de apresentar resultado parcial como completo.
 
-## Resultado verificado nesta instância
+## Resultado da primeira entrega (antes da revisão SQL)
 
 `npm ci --cache /workspace/.npm-cache --no-audit --no-fund`: concluído. Node 24.22.1, npm 11.9.0 e Chromium do sistema.
 
@@ -57,3 +57,18 @@ Push/PR draft na feature não aciona os workflows inspecionados. Integrações e
 Limites: CI usa Node 22, não executado nesta instância; sem validação da aplicação ou do esquema reais de produção. O resultado é uma prévia local revisável, não aprovação para produção.
 
 Branch enviada com sucesso: https://github.com/felipehnrq/lume-woman-site/tree/feat/acabaram-de-chegar . Implementação no commit `42b69a5`. A tentativa de criar PR **draft** contra main retornou `Post https://api.github.com/graphql: Forbidden`; portanto nenhum PR foi criado por esta sessão. Não foram solicitados tokens nem alterados secrets/políticas para contornar a restrição. O conteúdo de revisão e os commits estão preservados na feature. Após higienizar o estado visual das capturas, os três testes responsivos foram repetidos e passaram.
+
+
+## Continuação — contrato de primeira publicação
+
+Revisão e correções exclusivamente locais na branch `feat/acabaram-de-chegar`. A proposta ganhou transação com lock/timeouts, guards de RLS/tipo/tabela sem particionamento/herança, constraint de coerência e SECURITY INVOKER explícito. Não muda RLS, policies ou grants; não atualiza valores antigos. Uma revisão independente reproduziu bypass por herança clássica na versão anterior; a proposta agora recusa tanto tabelas-pai como filhas antes de qualquer ALTER, com regressões RED→GREEN.
+
+Novos cadastros (inclusive rascunhos) ficam rastreados. Primeiro publicado recebe horário da instrução no banco; edição/categoria/despublicação/republicação e upsert preservam a data. Legados, inclusive rascunhos, ficam NULL e nunca são promovidos automaticamente. Testes agora exercitam anon, authenticated comum, administradora, revogação de admin, grants amplos e por coluna, rollback, conflitos, inspeção READ ONLY e preservação de dados/ACLs. As roles e permissões desses testes são sintéticas e exclusivamente locais.
+
+Arquivos desta etapa: `proposta/primeira-publicacao.sql`, `proposta/inspecao-somente-leitura.sql`, `proposta/validacao-pos-migracao.sql`, `IMPLANTACAO-SEGURA.md`, este relatório, `tests/publicacao.test.cjs` e `tests/publicacao-seguranca.test.cjs`. Aplicação, flag e workflows não foram modificados nesta etapa. Não houve push, PR, merge, deploy, SQL remoto ou alteração de permissões/secrets reais.
+
+O roteiro exato está em [IMPLANTACAO-SEGURA.md](IMPLANTACAO-SEGURA.md): inspeção autorizada somente leitura → ensaio no esquema real sanitizado/versionado e PostgREST → migração separadamente autorizada → comparação de dados, segurança e leitura API → ativação da flag separadamente aprovada. Se faltar SELECT da nova coluna, manter flag false; nenhum GRANT amplo será aplicado por esta proposta.
+
+PGlite executa PostgreSQL 18.6. A tentativa de obter PostgreSQL 17 nativo via Docker foi recusada pelo registro (`unauthorized: authentication required`); não foram solicitadas credenciais. Compatibilidade com a versão nativa do projeto, concorrência em sessões distintas, triggers/RLS/grants reais e metadados PostgREST continuam pendentes. A preparação local não remove esses gates de integração real.
+
+Resultado desta continuação: `npm ci --cache /workspace/.npm-cache --no-audit --no-fund` concluído; `CHROMIUM_PATH=/usr/bin/chromium npm test --cache /workspace/.npm-cache` aprovou **33 testes Node.js + 52 Playwright (85 no total), zero falhas e zero ignorados**. Após acrescentar à inspeção somente leitura as permissões efetivas de schemas/funções, `node --test tests/*.test.cjs` foi repetido e aprovou novamente os 33 testes, inclusive os dois scripts SQL READ ONLY. `git diff --check` passou. Sem teste nativo PostgreSQL 17/PostgREST, sem validação concorrente em duas sessões e sem validação do banco remoto. A flag permanece false; não há aprovação para produção.
