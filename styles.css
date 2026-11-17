@@ -233,7 +233,7 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
 /* Novidades: enquadramento consistente e ação compacta no mobile. */
 .new-arrivals .product-img-wrap img{object-fit:contain;object-position:center}
 @media(max-width:700px){
-  .new-arrivals .product-img-wrap{padding-bottom:50px}
+  .new-arrivals .product-img-wrap{padding-bottom:52px}
   .new-arrivals .quick-add{
     left:10px;right:10px;bottom:8px;width:calc(100% - 20px);
     min-height:44px;padding:8px 4px;font-size:10px;line-height:1.2;

@@ -26,6 +26,7 @@ const products = [{
   preco:90, categoria_id:1, publicado:true, categorias:{nome:'Casual'}, produto_tamanhos:[]
 }];
 const photos = ['portrait','landscape','square'].map((name, ordem) => ({id:name, produto_id:productId, caminho:`tests/${name}.svg`, ordem}));
+photos.push({id:'out-of-stock', produto_id:products[1].id, caminho:'tests/out-of-stock.svg', ordem:0});
 const user = {id:userId, email:'owner@example.test', role:'authenticated', aud:'authenticated', app_metadata:{}, user_metadata:{}};
 
 async function setup(page, options = {}) {
