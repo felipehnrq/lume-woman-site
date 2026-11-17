@@ -91,7 +91,7 @@
         imagens:imagens,
         semFoto:imagens.length===0
       };
-    }).filter(p=>p.nome && Number.isFinite(p.preco) && p.preco>=0);
+    }).filter(p=>p.nome && Number.isFinite(p.preco) && p.preco>=0 && p.imagens.length>0);
   }
   // Reutiliza exclusivamente as colunas públicas existentes. Nunca consulta estoque.
   window.LUME_REFRESH_SIZES = async () => {
