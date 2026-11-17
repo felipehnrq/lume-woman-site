@@ -33,6 +33,7 @@ async function load({failPage=false,cap=500,noRange=false}={}){
  const context={window:{LUME_SUPABASE:{url:'https://example.supabase.co',publishableKey:'sb_publishable_test'},LumeCatalogPolicy:policy()},URLSearchParams,AbortSignal,fetch:async(endpoint,options)=>{
   const url=new URL(endpoint),table=url.pathname.split('/').pop(),params=url.searchParams;
   calls.push({table,params,options});
+  if(table==='produto_imagens')return {ok:true,headers:{get:()=>`0-${rows.length-1}/${rows.length}`},json:async()=>rows.map(p=>({produto_id:p.id,caminho:`teste/${p.id}.jpg`,ordem:0}))};
   if(table==='produtos'){
    const offset=Number(params.get('offset')||0);
    if(offset&&failPage)return {ok:false,status:503};
