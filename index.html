@@ -8,6 +8,18 @@
   <meta name="referrer" content="strict-origin-when-cross-origin"/>
   <meta name="description" content="Lume Woman — moda feminina casual e social. Escolha suas peças e finalize o pedido pelo WhatsApp."/>
   <title>Lume Woman | Moda feminina</title>
+  <script>
+    /* Aplica o último tema validado antes de pintar a página. */
+    (() => {
+      try {
+        const theme = JSON.parse(localStorage.getItem('lume_woman_tema_publico_v1') || 'null');
+        if (!theme || typeof theme !== 'object') return;
+        for (const [name, value] of [['--clay',theme.cor_destaque],['--paper',theme.cor_fundo],['--ink',theme.cor_texto]]) {
+          if (typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value)) document.documentElement.style.setProperty(name,value);
+        }
+      } catch (_) {}
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css"/>
   <link rel="stylesheet" href="marca.css"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&amp;display=swap" media="print" onload="this.media='all'"/>
 </head>
