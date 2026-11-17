@@ -83,3 +83,9 @@ Foi reproduzido um bypass na proposta anterior com herança clássica: ALTER TAB
 ## Evidência local final
 
 `npm ci` concluiu. `npm test` aprovou 33 testes Node.js e 52 Playwright, sem falhas/ignorados. A suíte Node foi repetida após o último acréscimo de metadados ao script de inspeção e aprovou os mesmos 33 testes. As verificações incluem execução dos scripts de inspeção/validação em transações READ ONLY e comparação de dados/ACLs. Esses resultados não substituem o ensaio no esquema real e na versão do destino.
+
+## Evidência adicional fornecida pelo usuário: laboratório PostgreSQL 17.11
+
+A inspeção informada confirma created_at/publicado/updated_at, ausência de first_published_at, leitura anon de publicados, gerenciamento authenticated por private.is_admin() e grants SELECT/INSERT/UPDATE/DELETE. Informa também o trigger BEFORE UPDATE produtos_set_updated_at → private.set_updated_at(). Ver a seção correspondente em REVISAO.md e o teste publicacao-updated-at.test.cjs.
+
+Isso reduz as incógnitas de esquema, mas não substitui a definição do corpo da função existente. O novo trigger executa antes dela por ordem alfabética; validar que a função posterior só atualiza updated_at e retorna NEW, sem restaurar OLD ou alterar publicado/first_published_at/publication_tracked. Não renomear/remover o trigger existente nem enfraquecer seus grants para forçar compatibilidade. O ensaio nativo/PostgREST deve usar PostgreSQL 17.11, conforme versão informada. A proposta e os gates de inspeção/migração/validação/ativação permanecem separados.
