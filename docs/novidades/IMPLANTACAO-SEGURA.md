@@ -1,6 +1,6 @@
 # Primeira publicação — contrato e sequência de implantação
 
-**Estado:** preparação local na branch `feat/acabaram-de-chegar`. Sem SQL remoto, alteração de permissões remotas, deploy, push, merge ou ativação da flag nesta etapa. Os scripts deste diretório são material de revisão para um operador autorizado, não instruções para executar automaticamente. Flag continua `false`.
+**Estado atual:** ensaio local concluído na branch `feat/acabaram-de-chegar`; push normal apenas da feature autorizado. Sem SQL remoto, alteração de permissões remotas, deploy, merge ou ativação da flag. Os scripts deste diretório são material de revisão para um operador autorizado, não instruções para executar automaticamente. Flag continua `false`.
 
 ## O que foi verificado no repositório
 
@@ -8,7 +8,7 @@
 
 As migrations existentes tratam pagamentos e tema, não definem a tabela produtos, suas policies/grants nem todos os triggers. REVIEW.md registra historicamente admin_users, auth.uid() e private.is_admin(), mas isso não é evidência atual do banco. A fixture nova reproduz esse padrão explicitamente como hipótese de contrato, sem afirmar que replica o esquema remoto.
 
-A proposta usa recursos comuns do PostgreSQL (DDL transacional, RLS, trigger BEFORE ROW, SECURITY INVOKER e timestamptz), sem extensão Supabase, secret ou SECURITY DEFINER novo. Testada no PostgreSQL 18.6 do PGlite 0.5.15. Não foi validada em PostgREST nem na versão nativa do projeto. Tentativa de obter imagem PostgreSQL 17 foi recusada pelo registro Docker com `unauthorized: authentication required`; sem solicitação de credenciais ou contorno. Não confundir compatibilidade de sintaxe com validação da implantação real.
+**Histórico da etapa anterior (superado pelo ensaio nativo abaixo):** a proposta usa recursos comuns do PostgreSQL (DDL transacional, RLS, trigger BEFORE ROW, SECURITY INVOKER e timestamptz), sem extensão Supabase, secret ou SECURITY DEFINER novo. Testada no PostgreSQL 18.6 do PGlite 0.5.15. Não foi validada em PostgREST nem na versão nativa do projeto. Tentativa de obter imagem PostgreSQL 17 foi recusada pelo registro Docker com `unauthorized: authentication required`; sem solicitação de credenciais ou contorno. Não confundir compatibilidade de sintaxe com validação da implantação real.
 
 ## Contrato dos dados
 
@@ -88,4 +88,13 @@ Foi reproduzido um bypass na proposta anterior com herança clássica: ALTER TAB
 
 A inspeção informada confirma created_at/publicado/updated_at, ausência de first_published_at, leitura anon de publicados, gerenciamento authenticated por private.is_admin() e grants SELECT/INSERT/UPDATE/DELETE. Informa também o trigger BEFORE UPDATE produtos_set_updated_at → private.set_updated_at(). Ver a seção correspondente em REVISAO.md e o teste publicacao-updated-at.test.cjs.
 
-Isso reduz as incógnitas de esquema, mas não substitui a definição do corpo da função existente. O novo trigger executa antes dela por ordem alfabética; validar que a função posterior só atualiza updated_at e retorna NEW, sem restaurar OLD ou alterar publicado/first_published_at/publication_tracked. Não renomear/remover o trigger existente nem enfraquecer seus grants para forçar compatibilidade. O ensaio nativo/PostgREST deve usar PostgreSQL 17.11, conforme versão informada. A proposta e os gates de inspeção/migração/validação/ativação permanecem separados.
+A evidência posterior fornecida pelo usuário confirmou também o corpo e os atributos: SECURITY INVOKER, search_path vazio e somente NEW.updated_at = now(); RETURN NEW. O novo trigger executa antes dela por ordem alfabética; ambos alteram campos distintos. O teste local agora reproduz e verifica esses atributos. Essa incógnita específica foi resolvida. Não renomear/remover o trigger existente nem enfraquecer seus grants para forçar compatibilidade. O ensaio nativo/PostgREST deve usar PostgreSQL 17.11, conforme versão informada. A proposta e os gates de inspeção/migração/validação/ativação permanecem separados.
+
+
+## Ensaio nativo concluído — parecer atual
+
+Ver [ENSAIO-COMPATIBILIDADE.md](ENSAIO-COMPATIBILIDADE.md) para versões, metodologia, resultados e limites atuais. PostgreSQL 17.11 nativo e PostgREST 12.2.3 foram ensaiados em rede Docker interna, sem portas expostas ou conexão com Supabase. A lacuna anterior de execução nativa/API/concorrência foi resolvida para o esquema sanitizado equivalente. O dump integral do banco e a versão/configuração real do PostgREST/gateway continuam fora desse ensaio.
+
+**GO para solicitar autorização de migração controlada no laboratório**, mantendo a flag false. Não é autorização para executar. Antes da aplicação, cumprir a etapa 1 (incluindo nomes livres, tipos, herança, demais triggers, permissões efetivas e baseline/backup) no projeto correto e obter autorização específica. Depois, seguir etapas 3 e 4 com comparação de dados/ACLs, leitura Data API e observação autorizada de publicação legítima. **NO-GO para ativar a flag, publicar ou migrar produção** sem essas evidências e autorizações separadas. Migração de banco não exige merge em main.
+
+Para reproduzir sem acesso remoto: disponibilizar localmente as imagens oficiais/digests listados em tests/ensaio-postgres17.cjs e executar `node tests/ensaio-postgres17.cjs`. O script não baixa imagens nem pede credenciais; exige Docker local e falha se faltarem imagens. Ele cria somente rede --internal e containers com nomes aleatórios, banco em tmpfs, JWT efêmero e papéis/grants sintéticos, removendo seus recursos no finally. Acesso TRUST limita-se ao banco sintético na rede interna; não é configuração para um serviço persistente ou remoto. HTTP real passa por bash /dev/tcp dentro dessa rede, pois este Docker não disponibilizou o mapeamento de porta efêmera. Nenhum proxy de produção, cookie, chave Supabase ou credencial real participa.

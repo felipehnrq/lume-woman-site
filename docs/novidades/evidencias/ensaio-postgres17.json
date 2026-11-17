@@ -1,0 +1,25 @@
+{
+  "images": {
+    "postgres": "postgres:17.11@sha256:ff87138949ad9a46f32ff23bd6852b52ce024a13dffe9b4087be98292cdd3b4f",
+    "postgrest": "postgrest/postgrest:v12.2.3@sha256:729bf65c733b73f5b52777f0e4b853f22ed73aa67a22d38269d289779b0a8401"
+  },
+  "checks": [
+    "PostgreSQL 17.11 nativo confirmado",
+    "esquema sintético com RLS, grants e trigger confirmado",
+    "PostgREST HTTP real na rede interna, sem portas expostas",
+    "API detecta coluna ausente antes da migração",
+    "SQL nativo: primeira publicação, edição, republicação, legado e rollback",
+    "dados originais, ACLs, RLS, policies e trigger updated_at preservados",
+    "PostgREST lê first_published_at após migração/reload local",
+    "API: rascunho novo sem data e invisível para anon",
+    "API: publicação, categoria, edição e republicação preservam primeira data",
+    "API: anon/conta comum não sobrescrevem, inserem ou excluem produtos",
+    "API: rollback explícito não persiste mudança",
+    "duas sessões concorrentes preservam data da primeira publicação"
+  ],
+  "started_at": "2026-11-17T20:08:57.515Z",
+  "postgres": "17.11 (Debian 17.11-1.pgdg13+2)",
+  "postgrest": "PostgREST 12.2.3",
+  "status": "passed",
+  "finished_at": "2026-11-17T20:09:14.347Z"
+}

@@ -1,4 +1,4 @@
-/* Modelo local do esquema informado pelo usuário; corpo remoto do trigger não foi fornecido. */
+/* Modelo sanitizado com corpo/atributos de set_updated_at confirmados pelo usuário via inspeção somente leitura. */
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -20,8 +20,8 @@ test('coexistência com produtos_set_updated_at, RLS e grants de tabela informad
    grant usage on schema private to authenticated;
    create table public.produtos(id text primary key,publicado boolean not null default false,
     nome text default 'Teste local',created_at timestamptz not null default now(),updated_at timestamptz not null default now());
-   create function private.set_updated_at() returns trigger language plpgsql set search_path='' as $$
-   begin NEW.updated_at:=pg_catalog.now();return NEW;end;$$;
+   create function private.set_updated_at() returns trigger language plpgsql security invoker set search_path='' as $$
+   begin NEW.updated_at = now(); RETURN NEW; end;$$;
    create trigger produtos_set_updated_at before update on public.produtos for each row execute function private.set_updated_at();
    insert into public.produtos(id,publicado,created_at,updated_at) values('legado',true,'2000-01-01','2000-01-02');
    alter table public.produtos enable row level security;
@@ -36,13 +36,15 @@ test('coexistência com produtos_set_updated_at, RLS e grants de tabela informad
   const policies=await rows("select policyname,roles,cmd,qual,with_check from pg_policies where schemaname='public' and tablename='produtos' order by policyname");
   const existingTrigger=()=>rows("select tgname,tgenabled,pg_get_triggerdef(oid) as def from pg_trigger where tgrelid='public.produtos'::regclass and tgname='produtos_set_updated_at'");
   const triggerBefore=await existingTrigger();
-  const functionBefore=await rows("select pg_get_functiondef('private.set_updated_at()'::regprocedure) as def");
+  const functionBefore=await rows("select pg_get_functiondef(oid) as def,prosecdef,proconfig from pg_proc where oid='private.set_updated_at()'::regprocedure");
+  assert.equal(functionBefore[0].prosecdef,false);
+  assert.deepEqual(functionBefore[0].proconfig,['search_path=""']);
   await db.exec(migration);
   assert.deepEqual(await rows('select id,publicado,nome,created_at,updated_at from public.produtos'),before);
   assert.deepEqual(await rows("select relacl::text,relrowsecurity from pg_class where oid='public.produtos'::regclass"),acl);
   assert.deepEqual(await rows("select policyname,roles,cmd,qual,with_check from pg_policies where schemaname='public' and tablename='produtos' order by policyname"),policies);
   assert.deepEqual(await existingTrigger(),triggerBefore);
-  assert.deepEqual(await rows("select pg_get_functiondef('private.set_updated_at()'::regprocedure) as def"),functionBefore);
+  assert.deepEqual(await rows("select pg_get_functiondef(oid) as def,prosecdef,proconfig from pg_proc where oid='private.set_updated_at()'::regprocedure"),functionBefore);
   assert.deepEqual((await rows("select tgname from pg_trigger where tgrelid='public.produtos'::regclass and not tgisinternal order by tgname")).map(r=>r.tgname),['lume_primeira_publicacao','produtos_set_updated_at']);
   await as('authenticated','admin-fixture');
   await db.exec("insert into public.produtos(id,publicado,created_at) values('novo',false,'2001-01-01')");
