@@ -251,7 +251,8 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
 .hero-art-label{left:22px;bottom:22px}
 @media(max-width:760px){
  .hero{display:flex;flex-direction:column;min-height:0;height:auto;padding-top:28px;padding-bottom:26px}
- .hero-copy{padding:20px 0 26px}
+ .hero-copy{order:2;padding:24px 0 26px}
+ .hero-art{order:1}
  .hero h1{font-size:clamp(43px,10vw,65px)}
  .hero-art{min-height:0;height:clamp(380px,115vw,600px)}
  .hero-art img{object-position:center 20%}
