@@ -222,3 +222,21 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
 .collection-tools{flex-wrap:wrap;row-gap:20px;padding-block:8px 20px}
 .filters{flex-wrap:wrap;gap:12px;overflow:visible;padding:6px}
 @media(min-width:701px){.search-holder{padding-bottom:0}}
+
+/* Novidades reutiliza os cards e pontos de quebra da coleção. */
+.new-arrivals[hidden]{display:none}
+.new-arrivals{padding-bottom:0}
+.new-arrivals .product-grid{margin-top:30px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.new-arrivals-actions{margin-top:28px;text-align:center}
+@media(max-width:700px){.new-arrivals .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Novidades: enquadramento consistente e ação compacta no mobile. */
+.new-arrivals .product-img-wrap img{object-fit:contain;object-position:center}
+@media(max-width:700px){
+  .new-arrivals .product-img-wrap{padding-bottom:52px}
+  .new-arrivals .quick-add{
+    left:10px;right:10px;bottom:8px;width:calc(100% - 20px);
+    min-height:44px;padding:8px 4px;font-size:10px;line-height:1.2;
+    border-radius:24px;
+  }
+}

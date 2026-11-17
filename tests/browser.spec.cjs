@@ -26,6 +26,7 @@ const products = [{
   preco:90, categoria_id:1, publicado:true, categorias:{nome:'Casual'}, produto_tamanhos:[]
 }];
 const photos = ['portrait','landscape','square'].map((name, ordem) => ({id:name, produto_id:productId, caminho:`tests/${name}.svg`, ordem}));
+photos.push({id:'out-of-stock', produto_id:products[1].id, caminho:'tests/out-of-stock.svg', ordem:0});
 const user = {id:userId, email:'owner@example.test', role:'authenticated', aud:'authenticated', app_metadata:{}, user_metadata:{}};
 
 async function setup(page, options = {}) {
@@ -43,7 +44,7 @@ async function setup(page, options = {}) {
     if (url.hostname === 'cdn.jsdelivr.net') return route.fulfill({
       path:path.join(__dirname, '../node_modules/@supabase/supabase-js/dist/umd/supabase.js'), contentType:'text/javascript'
     });
-    const json = (body, status=200) => route.fulfill({status, contentType:'application/json', body:JSON.stringify(body)});
+    const json = (body, status=200) => route.fulfill({status, headers:Array.isArray(body)?{'access-control-expose-headers':'content-range','content-range':`0-${body.length-1}/${body.length}`}:{}, contentType:'application/json', body:JSON.stringify(body)});
     if (!url.hostname.endsWith('.supabase.co')) return route.fulfill({body:'', contentType:'text/css'});
     if (url.pathname.includes('/storage/')) {
       const width = url.pathname.includes('landscape') ? 1600 : 800;
@@ -186,7 +187,7 @@ test('consulta pública pagina tamanhos sem ler quantidade nem aceitar resposta 
     const offset=url.searchParams.get('offset');offsets.push(offset);
     if(offset==='500'&&failSecond)return route.fulfill({status:503,body:'Unavailable'});
     const rows=offset==='0'?Array.from({length:500},(_,i)=>({produto_id:'another-'+i,tamanho:'P',ordem:0})):sizes;
-    return route.fulfill({contentType:'application/json',body:JSON.stringify(rows)});
+    return route.fulfill({headers:{'access-control-expose-headers':'content-range','content-range':`${offset}-${Number(offset)+rows.length-1}/502`},contentType:'application/json',body:JSON.stringify(rows)});
   });
   const rows=await page.evaluate(()=>window.LUME_REFRESH_SIZES());
   expect(rows).toHaveLength(502);
