@@ -24,6 +24,7 @@ async function setup(page,{empty=false,stale=false,nearlyExpired=false,oneExpiri
   }
   if(table==='categorias')return json([{id:1,nome:'Casual'},{id:2,nome:'Social'}]);
   if(table==='produto_tamanhos')return json(rows.map(p=>({produto_id:p.id,tamanho:'M',ordem:0})));
+  if(table==='produto_imagens')return json(rows.map(p=>({produto_id:p.id,caminho:`teste/${p.id}.jpg`,ordem:0})));
   return json([]);
  });
  return {writes,errors};
