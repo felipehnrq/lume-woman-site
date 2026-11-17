@@ -247,7 +247,7 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
 .hero-copy{padding:48px 8% 48px 3%}
 .hero h1{font-size:clamp(49px,5.6vw,82px);line-height:1.09;letter-spacing:-.045em}
 .hero-art{min-height:550px;background:#e9d9ce;border-radius:2px;isolation:isolate}
-.hero-art img{object-fit:cover;object-position:center 24%}
+.hero-art img{object-fit:cover}
 .hero-art-label{left:22px;bottom:22px}
 @media(max-width:760px){
  .hero{display:flex;flex-direction:column;min-height:0;height:auto;padding-top:28px;padding-bottom:26px}
@@ -255,6 +255,5 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
  .hero-art{order:1}
  .hero h1{font-size:clamp(43px,10vw,65px)}
  .hero-art{min-height:0;height:clamp(380px,115vw,600px)}
- .hero-art img{object-position:center 20%}
  .hero-art-label{left:14px;bottom:14px;padding:10px 12px;font-size:9px}
 }
