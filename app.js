@@ -108,37 +108,14 @@
         <p class="product-detail">${esc(p.destaque)}</p>
        </div>
       </article>`; }
-  let showAllNew=false, newsTimer, newsMarkup='';
+  let featuredIds=[];
   function renderNewArrivals() {
-    const section=$('new-arrivals'), grid=$('new-products'), button=$('all-new-arrivals');
-    const focused=document.activeElement, hadFocus=section.contains(focused);
-    const focusedProduct=grid.contains(focused) ? focused.dataset.open : null;
-    const {newProducts,WEEK}=window.LumeCatalogPolicy;
-    const news=newProducts(items);
-    section.hidden=!news.length;
-    const markup=news.slice(0,showAllNew ? news.length : 4).map(productCard).join('');
-    if(markup!==newsMarkup){grid.innerHTML=markup;newsMarkup=markup;}
-    clearTimeout(newsTimer);
-    if(news.length){
-      const expires=Date.parse(news.at(-1).created_at)+WEEK;
-      newsTimer=setTimeout(renderNewArrivals,Math.max(1,expires-Date.now()));
-    }
-    button.hidden=news.length<=4;
-    button.setAttribute('aria-expanded',String(showAllNew));
-    button.textContent=showAllNew ? 'Mostrar menos novidades' : 'Ver todas as novidades';
-    if(hadFocus && (!focused.isConnected || section.hidden || (focused===button && button.hidden))){
-      const same=Array.from(grid.querySelectorAll('[data-open]')).find(b=>b.dataset.open===focusedProduct);
-      const target=section.hidden ? $('colecao').querySelector('h2') :
-        (same || grid.querySelector('[data-open]') || $('new-arrivals-title'));
-      target.setAttribute('tabindex',target.tagName==='BUTTON' ? '0' : '-1');
-      target.focus({preventScroll:true});
-    }
+    const section=$('new-arrivals'), grid=$('new-products');
+    const byId=new Map(items.map(p=>[p.publicId,p]));
+    const featured=featuredIds.map(id=>byId.get(id)).filter(Boolean);
+    section.hidden=!featured.length;
+    grid.innerHTML=featured.map(productCard).join('');
   }
-  $('all-new-arrivals').addEventListener('click',()=>{showAllNew=!showAllNew;renderNewArrivals();});
-  // Expiração também funciona em páginas abertas e ao retornar de uma aba suspensa.
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderNewArrivals();});
-  window.addEventListener('pageshow',renderNewArrivals);
-
   function renderProducts() {
     renderNewArrivals();
     const filtered=items.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
@@ -270,9 +247,9 @@
     $('results-count').textContent='Buscando produtos publicados…';
     renderCart();
     try {
-      const loaded=await window.LUME_CATALOG_READY;
+      const [loaded,featured]=await Promise.all([window.LUME_CATALOG_READY,window.LUME_FEATURED_READY]);
       if(loaded.error) throw loaded.error;
-      items=loaded.data;
+      items=loaded.data;featuredIds=Array.isArray(featured)?[...new Set(featured)].slice(0,4):[];
       ready=true;restoreCart();renderProducts();renderCart();
     } catch(error) {
       loadFailed=true;items=[];cart=[];ready=false;
