@@ -99,5 +99,10 @@
       select:'produto_id,tamanho,ordem',order:'produto_id.asc,ordem.asc,tamanho.asc'
     });
   };
+  // Ordem editorial definida no painel; sem seleção, a seção de destaques fica oculta.
+  window.LUME_FEATURED_READY = read('loja_tema', {
+    select:'produtos_destaque',id:'eq.1'
+  }).then(rows => Array.isArray(rows[0]?.produtos_destaque) ? rows[0].produtos_destaque : [],
+          error => { console.warn('Destaques indisponíveis',error);return []; });
   window.LUME_CATALOG_READY = loadCatalog().then(data => ({data}), error => ({error}));
 })();
