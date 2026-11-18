@@ -108,15 +108,46 @@
         <p class="product-detail">${esc(p.destaque)}</p>
        </div>
       </article>`; }
-  let featuredIds=[];
-  function renderNewArrivals() {
-    const section=$('new-arrivals'), grid=$('new-products');
+  let featuredIds=[], showAllNew=false, newsTimer, newsMarkup='';
+  function renderFeatured() {
+    const section=$('featured-products'), grid=$('featured-grid');
     const byId=new Map(items.map(p=>[p.publicId,p]));
     const featured=featuredIds.map(id=>byId.get(id)).filter(Boolean);
     section.hidden=!featured.length;
     grid.innerHTML=featured.map(productCard).join('');
   }
+  function renderNewArrivals() {
+    const section=$('new-arrivals'), grid=$('new-products'), button=$('all-new-arrivals');
+    const focused=document.activeElement, hadFocus=section.contains(focused);
+    const focusedProduct=grid.contains(focused) ? focused.dataset.open : null;
+    const {newProducts,WEEK}=window.LumeCatalogPolicy;
+    const recent=newProducts(items);
+    // Sem cadastro nos últimos sete dias, exibe as últimas peças da coleção.
+    const news=recent.length ? recent : items.slice(0,4);
+    section.hidden=!news.length;
+    const markup=news.slice(0,showAllNew ? news.length : 4).map(productCard).join('');
+    if(markup!==newsMarkup){grid.innerHTML=markup;newsMarkup=markup;}
+    clearTimeout(newsTimer);
+    if(recent.length){
+      const expires=Date.parse(recent.at(-1).created_at)+WEEK;
+      newsTimer=setTimeout(renderNewArrivals,Math.max(1,expires-Date.now()));
+    }
+    button.hidden=news.length<=4;
+    button.setAttribute('aria-expanded',String(showAllNew));
+    button.textContent=showAllNew ? 'Mostrar menos novidades' : 'Ver todas as novidades';
+    if(hadFocus && (!focused.isConnected || section.hidden || (focused===button && button.hidden))){
+      const same=Array.from(grid.querySelectorAll('[data-open]')).find(b=>b.dataset.open===focusedProduct);
+      const target=section.hidden ? $('colecao').querySelector('h2') :
+        (same || grid.querySelector('[data-open]') || $('new-arrivals-title'));
+      target.setAttribute('tabindex',target.tagName==='BUTTON' ? '0' : '-1');
+      target.focus({preventScroll:true});
+    }
+  }
+  $('all-new-arrivals').addEventListener('click',()=>{showAllNew=!showAllNew;renderNewArrivals();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)renderNewArrivals();});
+  window.addEventListener('pageshow',()=>{if(ready)renderNewArrivals();});
   function renderProducts() {
+    renderFeatured();
     renderNewArrivals();
     const filtered=items.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
       (p.nome+' '+p.categoria+' '+p.id).toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
