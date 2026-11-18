@@ -173,7 +173,7 @@ test('rede indisponível não significa saldo zero; retorno à aba atualiza com 
 test('aba oculta não consulta; atualizações não se sobrepõem e dados inválidos são descartados', async ({page}) => {
   const {state}=await setup(page);
   await page.clock.install(); await page.goto('/');
-  await expect(page.locator('.product-card')).toHaveCount(2);
+  await expect(page.locator('#products .product-card')).toHaveCount(2);
   await page.evaluate(()=>Object.defineProperty(document,'hidden',{configurable:true,value:true}));
   await page.clock.fastForward(120000);
   expect(state.sizeReads).toBe(1);
@@ -189,7 +189,7 @@ test('aba oculta não consulta; atualizações não se sobrepõem e dados invál
 test('consulta pública pagina tamanhos sem ler quantidade nem aceitar resposta parcial', async ({page}) => {
   await setup(page);
   await page.goto('/');
-  await expect(page.locator('.product-card')).toHaveCount(2);
+  await expect(page.locator('#products .product-card')).toHaveCount(2);
   const offsets=[];
   let failSecond=false;
   await page.route('**/rest/v1/produto_tamanhos?*',route=>{
@@ -212,7 +212,7 @@ test('menu mobile por teclado, largura e movimento reduzido', async ({page}) => 
   await page.setViewportSize({width:320,height:568});
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
-  await expect(page.locator('.product-card')).toHaveCount(2);
+  await expect(page.locator('#products .product-card')).toHaveCount(2);
   const menu=page.locator('#menu-toggle'),nav=page.locator('#primary-nav');
   await expect(nav).toBeHidden();
   await menu.focus();await menu.press('Enter');
@@ -226,8 +226,8 @@ test('menu mobile por teclado, largura e movimento reduzido', async ({page}) => 
   await expect(page.locator('html')).toHaveCSS('scroll-behavior','auto');
   await expect(page.locator('.hero-copy')).toHaveCSS('animation-name','none');
   await page.locator('#search').fill('Vestido');
-  await expect(page.locator('.product-card')).toHaveCount(1);
-  await expect(page.locator('.product-card')).toBeVisible();
+  await expect(page.locator('#products .product-card')).toHaveCount(1);
+  await expect(page.locator('#products .product-card')).toBeVisible();
   await page.setViewportSize({width:1440,height:900});
   await expect(nav).toBeVisible();await expect(menu).toBeHidden();
 });
@@ -536,7 +536,7 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
     const {errors} = await setup(page);
     await page.setViewportSize(viewport);
     await page.goto('/');
-    await expect(page.locator('.product-card')).toHaveCount(2);
+    await expect(page.locator('#products .product-card')).toHaveCount(2);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     if(process.env.LUME_EVIDENCE_DIR){
       await page.locator('#products').scrollIntoViewIfNeeded();
@@ -573,7 +573,7 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
     await expect(page.locator('#cart-count')).toHaveText('1');
     await page.locator('#close-cart').click();
     await page.locator('#search').fill('sem estoque');
-    await expect(page.locator('.product-card')).toHaveCount(1);
+    await expect(page.locator('#products .product-card')).toHaveCount(1);
     await expect(page.locator('.quick-add')).toBeDisabled();
     await page.locator('#search').fill('');
     await page.locator('#products [data-open="LW-001"]').click();
