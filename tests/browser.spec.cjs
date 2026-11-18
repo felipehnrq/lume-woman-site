@@ -98,7 +98,8 @@ async function setup(page, options = {}) {
           state.featured=[...payload.produtos_destaque];
         }
       }
-      return json([{id:1,depoimentos:[],produtos_destaque:state.featured}]);
+      const response={id:1,depoimentos:[],produtos_destaque:state.featured};
+      return request.headers().accept?.includes('application/vnd.pgrst.object+json') ? json(response) : json([response]);
     }
     if (table === 'vendas_manuais') return json([]);
     return json({message:'Unexpected endpoint'},404);
