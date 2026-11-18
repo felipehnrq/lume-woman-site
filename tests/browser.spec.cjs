@@ -574,7 +574,7 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
     await page.locator('#close-cart').click();
     await page.locator('#search').fill('sem estoque');
     await expect(page.locator('#products .product-card')).toHaveCount(1);
-    await expect(page.locator('.quick-add')).toBeDisabled();
+    await expect(page.locator('#products .quick-add')).toBeDisabled();
     await page.locator('#search').fill('');
     await page.locator('#products [data-open="LW-001"]').click();
     await page.keyboard.press('Escape');
