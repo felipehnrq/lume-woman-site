@@ -20,6 +20,8 @@ async function mock(page,ids=['product-4','product-1','product-0','product-3']){
 for(const width of [390,1440])test('quatro destaques em ordem manual sem alterar coleção '+width,async({page})=>{
  await page.setViewportSize({width,height:900});const errors=await mock(page);
  await page.goto('/');
+ await page.waitForTimeout(700);
+ console.log('DEBUG vitrine',await page.locator('#results-count').textContent(),await page.locator('#products').innerText(),await page.evaluate(()=>({catalog:typeof window.LUME_CATALOG_READY,featured:typeof window.LUME_FEATURED_READY})),errors);
  await expect(page.locator('#new-products .product-title')).toHaveText(['Peça 4','Peça 1','Peça 0','Peça 3']);
  await expect(page.locator('#products .product-title')).toHaveText(['Peça 0','Peça 1','Peça 2','Peça 3','Peça 4','Peça 5']);
  await expect(page.locator('#new-arrivals-title')).toHaveText('Destaques da vitrine');
