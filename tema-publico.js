@@ -3,6 +3,7 @@
  'use strict';
  const CACHE_KEY = 'lume_woman_logo_publica';
  const BANNER_CACHE_KEY = 'lume_woman_banner_publico';
+ const THEME_CACHE_KEY = 'lume_woman_tema_publico_v1';
  const defaults = {
    cor_destaque:'#b67b68', cor_fundo:'#fffdfa', cor_texto:'#29221f', fonte:'original', grade:3,
    titulo_linha1:'Vista a sua', titulo_linha2:'melhor versão.',
@@ -40,6 +41,9 @@
    });
  }
  function apply(t){
+   try {
+     localStorage.setItem(THEME_CACHE_KEY,JSON.stringify({cor_destaque:t.cor_destaque,cor_fundo:t.cor_fundo,cor_texto:t.cor_texto}));
+   } catch (_) {}
    const root=document.documentElement;
    root.style.setProperty('--clay',hex(t.cor_destaque)||defaults.cor_destaque);
    root.style.setProperty('--paper',hex(t.cor_fundo)||defaults.cor_fundo);
@@ -60,7 +64,11 @@
        localStorage.removeItem(BANNER_CACHE_KEY);
    } catch(_) {}
    const banner=$('tema-banner'),bannerURL=photo(t.banner_caminho,'banner');
-   if(banner){banner.src=bannerURL||'assets/hero.svg';banner.onerror=()=>{banner.onerror=null;banner.src='assets/hero.svg';};}
+   if(banner){
+     const next=bannerURL||'assets/hero.svg';
+     if(banner.getAttribute('src')!==next)banner.src=next;
+     banner.onerror=()=>{banner.onerror=null;banner.src='assets/hero.svg';};
+   }
  }
  function restoreBanner(){
    const banner=$('tema-banner');
