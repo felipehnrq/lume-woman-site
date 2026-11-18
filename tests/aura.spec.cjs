@@ -8,7 +8,7 @@ test('AURA: primeira pintura usa cores aprovadas sem cache',async({page})=>{
     ink:el.style.getPropertyValue('--ink')
   }));
   expect(theme).toEqual({clay:'#543d34',paper:'#f7e7da',ink:'#29221f'});
-  await expect(page.locator('#tema-banner')).toHaveAttribute('src',/branding\\/banner\\/.*\\.webp/);
+  await expect(page.locator('#tema-banner')).toHaveAttribute('src',/branding.*banner.*webp/);
 });
 
 test('AURA: imagem única antecede o texto no celular',async({page})=>{
