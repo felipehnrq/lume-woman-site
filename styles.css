@@ -257,3 +257,7 @@ body.tema-classico h1,body.tema-classico h2,body.tema-classico h3{font-family:Ge
  .hero-art{min-height:0;height:clamp(380px,115vw,600px)}
  .hero-art-label{left:14px;bottom:14px;padding:10px 12px;font-size:9px}
 }
+
+/* Apenas a faixa Sobre a Lume fica branca em toda a largura da página. */
+#sobre.brand-section{position:relative;isolation:isolate}
+#sobre.brand-section::before{content:"";position:absolute;inset:0 calc(50% - 50vw);background:#fff;z-index:-1;pointer-events:none}

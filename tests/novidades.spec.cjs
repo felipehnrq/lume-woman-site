@@ -25,18 +25,30 @@ async function mock(page,ids=['product-4','product-1','product-0','product-3']){
 for(const width of [390,1440])test('quatro destaques em ordem manual sem alterar coleção '+width,async({page})=>{
  await page.setViewportSize({width,height:900});const errors=await mock(page);
  await page.goto('/');
- await expect(page.locator('#new-products .product-title')).toHaveText(['Peça 4','Peça 1','Peça 0','Peça 3']);
+ await expect(page.locator('#featured-grid .product-title')).toHaveText(['Peça 4','Peça 1','Peça 0','Peça 3']);
+ await expect(page.locator('#new-arrivals')).toBeVisible();
+ await expect(page.locator('#new-arrivals-title')).toHaveText('Acabaram de chegar');
+ await expect(page.locator('#new-products .product-card')).toHaveCount(4);
  await expect(page.locator('#products .product-title')).toHaveText(['Peça 0','Peça 1','Peça 2','Peça 3','Peça 4','Peça 5']);
- await expect(page.locator('#new-arrivals-title')).toHaveText('Destaques da vitrine');
+ await expect(page.locator('#featured-products-title')).toHaveText('Destaques da vitrine');
  expect(errors).toEqual([]);
 });
-test('sem destaques seção oculta e catálogo preservado',async({page})=>{
+test('sem destaques seção manual oculta mas novidades preservadas',async({page})=>{
  await mock(page,[]);await page.goto('/');
- await expect(page.locator('#new-arrivals')).toBeHidden();
+ await expect(page.locator('#featured-products')).toBeHidden();
+ await expect(page.locator('#new-arrivals')).toBeVisible();
+ await expect(page.locator('#new-products .product-card')).toHaveCount(4);
  await expect(page.locator('#products .product-card')).toHaveCount(6);
 });
 test('ignora produto inexistente e duplicações',async({page})=>{
  await mock(page,['product-2','product-2','inexistente','product-0']);
  await page.goto('/');
- await expect(page.locator('#new-products .product-title')).toHaveText(['Peça 2','Peça 0']);
+ await expect(page.locator('#featured-grid .product-title')).toHaveText(['Peça 2','Peça 0']);
+});
+
+test('a seção Sobre a Lume permanece branca, sem alterar o restante do tema',async({page})=>{
+ await mock(page,[]);await page.goto('/');
+ const colors=await page.evaluate(()=>({sobre:getComputedStyle(document.querySelector('#sobre'),'::before').backgroundColor,body:getComputedStyle(document.body).backgroundColor}));
+ expect(colors.sobre).toBe('rgb(255, 255, 255)');
+ expect(colors.body).not.toBe('rgb(255, 255, 255)');
 });
