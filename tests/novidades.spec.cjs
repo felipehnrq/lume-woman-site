@@ -3,7 +3,9 @@ async function mock(page,ids=['product-4','product-1','product-0','product-3']){
  const rows=Array.from({length:6},(_,i)=>({id:'product-'+i,codigo:'LW-'+i,nome:'Peça '+i,preco:120,categoria_id:1,publicado:true,created_at:new Date(Date.now()-i*86400000).toISOString()}));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('**/*',route=>{
-   const url=new URL(route.request().url);
+   const rawUrl=route.request().url();
+   if(!/^https?:\/\//i.test(rawUrl))return route.continue();
+   const url=new URL(rawUrl);
    if(url.hostname==='127.0.0.1')return route.continue();
    if(!url.hostname.endsWith('.supabase.co'))return route.fulfill({body:'',contentType:'text/css'});
    const table=url.pathname.split('/').pop();
