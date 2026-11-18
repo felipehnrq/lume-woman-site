@@ -54,10 +54,11 @@ test('loader pagina todas as relações e usa ordem total; usa apenas o cadastro
  assert.equal(result.data[0].id,'LW-0');assert.equal(result.data[0].created_at,'2026-11-17T12:00:00.000Z');
  assert.equal(policy().newProducts(result.data,now).length,501);
  assert.equal(calls.filter(c=>c.table==='produtos').length,2);
- const columns=calls[0].params.get('select').split(',');
+ const productCall=calls.find(c=>c.table==='produtos');
+ const columns=productCall.params.get('select').split(',');
  assert.ok(columns.includes('created_at'));
  assert.ok(!columns.includes('first_published_at'));
- assert.equal(calls[0].params.get('order'),'created_at.desc.nullslast,id.asc');
+ assert.equal(productCall.params.get('order'),'created_at.desc.nullslast,id.asc');
  assert.ok(calls.every(c=>c.options.method==='GET'));
 });
 test('vitrine não exibe produtos publicados sem fotografia cadastrada',async()=>{

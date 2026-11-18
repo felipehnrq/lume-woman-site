@@ -31,7 +31,7 @@ const user = {id:userId, email:'owner@example.test', role:'authenticated', aud:'
 
 async function setup(page, options = {}) {
   const state = {payments:{...defaults, ...options.payments}, writes:[], denySave:false, emptySave:false,
-    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, sizes:structuredClone(sizes), failSizes:false, sizeReads:0, stockRows:structuredClone(options.stockRows || products), stockReads:[], failStock:false, stockGate:null};
+    admin: options.admin !== false, failPayments: !!options.failPayments, failDelivery: !!options.failDelivery, delaySave:0, sizes:structuredClone(sizes), failSizes:false, sizeReads:0, stockRows:structuredClone(options.stockRows || products), stockReads:[], failStock:false, stockGate:null, featured:[...(options.featured||[])], featuredWrites:[], denyFeaturedSave:!!options.denyFeaturedSave};
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.addInitScript(() => {
@@ -89,7 +89,18 @@ async function setup(page, options = {}) {
       return state.failSizes ? json({message:'Unavailable'},503) : json(state.sizes);
     }
     if (table === 'produto_imagens') return json(photos);
-    if (table === 'loja_tema') return json([{id:1,depoimentos:[]}]);
+    if (table === 'loja_tema') {
+      if (request.method() === 'PATCH') {
+        if (state.denyFeaturedSave) return json({code:'42501',message:'permission denied'},403);
+        const payload=request.postDataJSON();
+        if (Object.hasOwn(payload,'produtos_destaque')) {
+          state.featuredWrites.push(payload);
+          state.featured=[...payload.produtos_destaque];
+        }
+      }
+      const response={id:1,depoimentos:[],produtos_destaque:state.featured};
+      return request.headers().accept?.includes('application/vnd.pgrst.object+json') ? json(response) : json([response]);
+    }
     if (table === 'vendas_manuais') return json([]);
     return json({message:'Unexpected endpoint'},404);
   });
@@ -829,4 +840,35 @@ test('administradora escolhe os métodos, salva, recarrega e vê somente os habi
   await page.goto('/'); await addToCart(page);
   await expect(page.locator('.payment-option:visible')).toHaveCount(3);
   expect(errors).toEqual([]);
+});
+
+test('painel: administradora escolhe, ordena e persiste destaques, sem alterar produtos', async ({page}) => {
+  const {state,errors}=await setup(page);
+  await page.goto('/admin/#produtos');
+  await login(page);
+  const inputs=page.locator('#destaques-slots select');
+  await expect(inputs).toHaveCount(4);
+  await expect(page.locator('#destaques-salvar')).toBeEnabled();
+  await inputs.nth(0).selectOption(products[1].id);
+  await inputs.nth(1).selectOption(products[0].id);
+  await page.locator('#destaques-salvar').click();
+  await expect(page.locator('#destaques-status')).toContainText('Destaques publicados');
+  expect(state.featuredWrites).toEqual([{produtos_destaque:[products[1].id,products[0].id]}]);
+  await page.reload();
+  await expect(page.locator('#view-panel')).toBeVisible();
+  await expect(page.locator('#destaques-slots select').nth(0)).toHaveValue(products[1].id);
+  await expect(page.locator('#destaques-slots select').nth(1)).toHaveValue(products[0].id);
+  expect(state.featuredWrites).toHaveLength(1);
+  expect(errors).toEqual([]);
+});
+
+test('painel: rejeição de permissão impede confirmação falsa',async ({page})=>{
+  const {state}=await setup(page,{denyFeaturedSave:true});
+  await page.goto('/admin/#produtos');
+  await login(page);
+  await expect(page.locator('#destaques-salvar')).toBeEnabled();
+  await page.locator('#destaques-slots select').nth(0).selectOption(products[0].id);
+  await page.locator('#destaques-salvar').click();
+  await expect(page.locator('#destaques-status')).toContainText('Falha ao salvar');
+  expect(state.featuredWrites).toEqual([]);
 });
