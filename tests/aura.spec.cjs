@@ -3,9 +3,9 @@ const {test,expect}=require('@playwright/test');
 test('AURA: primeira pintura usa cores aprovadas sem cache',async({page})=>{
   await page.goto('/',{waitUntil:'domcontentloaded'});
   const theme=await page.locator('html').evaluate(el=>({
-    clay:el.style.getPropertyValue('--clay'),
-    paper:el.style.getPropertyValue('--paper'),
-    ink:el.style.getPropertyValue('--ink')
+    clay:getComputedStyle(el).getPropertyValue('--clay').trim(),
+    paper:getComputedStyle(el).getPropertyValue('--paper').trim(),
+    ink:getComputedStyle(el).getPropertyValue('--ink').trim()
   }));
   expect(theme).toEqual({clay:'#543d34',paper:'#f7e7da',ink:'#29221f'});
   await expect(page.locator('#tema-banner')).toHaveAttribute('src',/branding.*banner.*webp/);
