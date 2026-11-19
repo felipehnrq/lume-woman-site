@@ -61,7 +61,7 @@ test('catálogo preserva filtros e navegação de volta',async({page})=>{
   await page.locator('#search').fill('Peça 21');
   await expect(page.locator('#products .product-title')).toHaveText(['Peça 21']);
   await page.locator('.catalog-return').click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/index\.html$/);
 });
 test('Sobre a Lume mantém fundo branco da versão existente',async({page})=>{
   await mock(page,[]);
