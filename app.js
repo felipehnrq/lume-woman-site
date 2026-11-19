@@ -108,52 +108,57 @@
         <p class="product-detail">${esc(p.destaque)}</p>
        </div>
       </article>`; }
-  let featuredIds=[], showAllNew=false, newsTimer, newsMarkup='';
+  // A página inicial apresenta três seleções diferentes; o catálogo mostra todas as peças.
+  const isCatalogPage=document.body.dataset.page==='catalogo';
+  let featuredIds=[], newsTimer, newsMarkup='';
   function renderFeatured() {
     const section=$('featured-products'), grid=$('featured-grid');
+    if(!section||!grid)return [];
     const byId=new Map(items.map(p=>[p.publicId,p]));
     const featured=featuredIds.map(id=>byId.get(id)).filter(Boolean);
-    section.hidden=!featured.length;
-    grid.innerHTML=featured.map(productCard).join('');
+    section.hidden=isCatalogPage||!featured.length;
+    if(!isCatalogPage)grid.innerHTML=featured.map(productCard).join('');
+    return isCatalogPage?[]:featured.map(p=>p.publicId);
   }
-  function renderNewArrivals() {
+  function renderNewArrivals(excluded=[]) {
     const section=$('new-arrivals'), grid=$('new-products'), button=$('all-new-arrivals');
-    const focused=document.activeElement, hadFocus=section.contains(focused);
-    const focusedProduct=grid.contains(focused) ? focused.dataset.open : null;
-    const {newProducts,WEEK}=window.LumeCatalogPolicy;
-    const recent=newProducts(items);
-    // Sem cadastro nos últimos sete dias, exibe as últimas peças da coleção.
-    const news=recent.length ? recent : items.slice(0,4);
+    if(!section||!grid||isCatalogPage)return [];
+    const previouslyFocused=document.activeElement, hadFocus=section.contains(previouslyFocused);
+    const blocked=new Set(excluded);
+    const candidates=items.filter(p=>!blocked.has(p.publicId));
+    const recent=window.LumeCatalogPolicy.newProducts(candidates);
+    const used=new Set(recent.map(p=>p.publicId));
+    // Completa até quatro peças mais recentes sem repetir os destaques.
+    const news=[...recent,...candidates.filter(p=>!used.has(p.publicId))].slice(0,4);
     section.hidden=!news.length;
-    const markup=news.slice(0,showAllNew ? news.length : 4).map(productCard).join('');
+    const markup=news.map(productCard).join('');
     if(markup!==newsMarkup){grid.innerHTML=markup;newsMarkup=markup;}
+    if(button)button.hidden=true;
     clearTimeout(newsTimer);
     if(recent.length){
-      const expires=Date.parse(recent.at(-1).created_at)+WEEK;
-      newsTimer=setTimeout(renderNewArrivals,Math.max(1,expires-Date.now()));
+      const expires=Date.parse(recent.at(-1).created_at)+window.LumeCatalogPolicy.WEEK;
+      newsTimer=setTimeout(renderProducts,Math.max(1,expires-Date.now()));
     }
-    button.hidden=news.length<=4;
-    button.setAttribute('aria-expanded',String(showAllNew));
-    button.textContent=showAllNew ? 'Mostrar menos novidades' : 'Ver todas as novidades';
-    if(hadFocus && (!focused.isConnected || section.hidden || (focused===button && button.hidden))){
-      const same=Array.from(grid.querySelectorAll('[data-open]')).find(b=>b.dataset.open===focusedProduct);
-      const target=section.hidden ? $('colecao').querySelector('h2') :
-        (same || grid.querySelector('[data-open]') || $('new-arrivals-title'));
-      target.setAttribute('tabindex',target.tagName==='BUTTON' ? '0' : '-1');
-      target.focus({preventScroll:true});
+    if(hadFocus&&!previouslyFocused.isConnected){
+      const target=grid.querySelector('[data-open]')||$('new-arrivals-title');
+      target?.focus({preventScroll:true});
     }
+    return news.map(p=>p.publicId);
   }
-  $('all-new-arrivals').addEventListener('click',()=>{showAllNew=!showAllNew;renderNewArrivals();});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)renderNewArrivals();});
-  window.addEventListener('pageshow',()=>{if(ready)renderNewArrivals();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden&&ready)renderProducts();});
+  window.addEventListener('pageshow',()=>{if(ready)renderProducts();});
   function renderProducts() {
-    renderFeatured();
-    renderNewArrivals();
-    const filtered=items.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
+    const featured=renderFeatured();
+    const news=renderNewArrivals(featured);
+    const shown=new Set([...featured,...news]);
+    const collection=isCatalogPage?items:items.filter(p=>!shown.has(p.publicId)).slice(0,10);
+    const filtered=collection.filter(p=>(activeFilter==='Todas'||p.categoria===activeFilter) &&
       (p.nome+' '+p.categoria+' '+p.id).toLocaleLowerCase('pt-BR').includes(search.toLocaleLowerCase('pt-BR')));
     $('results-count').textContent=`${filtered.length} ${filtered.length===1?'peça encontrada':'peças encontradas'}`;
     if(!items.length){products.innerHTML='<div class="no-results">Ainda não há peças publicadas nesta coleção.</div>';return;}
-    products.innerHTML=filtered.length?filtered.map(productCard).join('') : '<div class="no-results">Não encontramos peças com essa busca. Tente outra palavra.</div>';
+    products.innerHTML=filtered.length?filtered.map(productCard).join('') :
+      (isCatalogPage?'<div class="no-results">Não encontramos peças com essa busca. Tente outra palavra.</div>':
+      '<div class="no-results">Explore toda a coleção para conhecer mais peças.</div>');
   }
   function renderCart() {
     $('cart-count').textContent=count();$('drawer-count').textContent=`(${count()})`;
