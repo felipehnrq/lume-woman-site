@@ -124,7 +124,7 @@ test('atualização leve retira tamanho, preserva carrinho e impede WhatsApp com
   const requests=[];
   page.on('request',r=>{if(r.url().includes('/rest/v1/produto_tamanhos'))requests.push(r);});
   await page.clock.install();
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   state.sizes=state.sizes.filter(s=>s.tamanho!=='M');
   await page.clock.fastForward(60000);
   await expect(page.locator('#availability-status')).toContainText('atualizada');
@@ -146,7 +146,7 @@ test('atualização leve retira tamanho, preserva carrinho e impede WhatsApp com
 
 test('rede indisponível não significa saldo zero; retorno à aba atualiza com intervalo mínimo', async ({page}) => {
   const {state}=await setup(page);
-  await page.clock.install(); await page.goto('/'); await addToCart(page);
+  await page.clock.install(); await page.goto('/catalogo.html'); await addToCart(page);
   state.failSizes=true;
   await page.clock.fastForward(60000);
   await expect(page.locator('#availability-status')).toContainText('Não foi possível');
@@ -172,7 +172,7 @@ test('rede indisponível não significa saldo zero; retorno à aba atualiza com 
 
 test('aba oculta não consulta; atualizações não se sobrepõem e dados inválidos são descartados', async ({page}) => {
   const {state}=await setup(page);
-  await page.clock.install(); await page.goto('/');
+  await page.clock.install(); await page.goto('/catalogo.html');
   await expect(page.locator('#products .product-card')).toHaveCount(2);
   await page.evaluate(()=>Object.defineProperty(document,'hidden',{configurable:true,value:true}));
   await page.clock.fastForward(120000);
@@ -188,7 +188,7 @@ test('aba oculta não consulta; atualizações não se sobrepõem e dados invál
 
 test('consulta pública pagina tamanhos sem ler quantidade nem aceitar resposta parcial', async ({page}) => {
   await setup(page);
-  await page.goto('/');
+  await page.goto('/catalogo.html');
   await expect(page.locator('#products .product-card')).toHaveCount(2);
   const offsets=[];
   let failSecond=false;
@@ -211,7 +211,7 @@ test('menu mobile por teclado, largura e movimento reduzido', async ({page}) => 
   await setup(page);
   await page.setViewportSize({width:320,height:568});
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.goto('/');
+  await page.goto('/catalogo.html');
   await expect(page.locator('#products .product-card')).toHaveCount(2);
   const menu=page.locator('#menu-toggle'),nav=page.locator('#primary-nav');
   await expect(nav).toBeHidden();
@@ -535,7 +535,7 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
   test(`fotografias completas e galeria em ${viewport.width}x${viewport.height}`, async ({page}) => {
     const {errors} = await setup(page);
     await page.setViewportSize(viewport);
-    await page.goto('/');
+    await page.goto('/catalogo.html');
     await expect(page.locator('#products .product-card')).toHaveCount(2);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
     if(process.env.LUME_EVIDENCE_DIR){
@@ -585,7 +585,7 @@ for (const viewport of [{width:320,height:568}, {width:390,height:844}, {width:8
 
 test('padrões, carrinho persistido, CEP e três preferências no WhatsApp', async ({page}) => {
   const {errors} = await setup(page);
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('[data-payment-credit]')).toHaveText('Crédito • até 3x sem juros');
   await expect(page.locator('#payment-help')).toHaveText('Escolha sua preferência. Crédito em até 3x sem juros. A loja informará o total e cada parcela antes da confirmação. Não envie número completo, CVV ou senha do cartão pelo WhatsApp.');
   await page.locator('[data-inc="0"]').click();
@@ -636,7 +636,7 @@ test('login, edição, persistência, vitrine, política e WhatsApp usam as cond
   expect(state.writes).toHaveLength(1); expect(state.payments.credito_parcelas).toBe(6);
   await page.reload(); await expect(page.locator('#pag-credito_parcelas')).toHaveValue('6');
   await page.screenshot({path:testInfo.outputPath('pagamentos-admin.png'),fullPage:true});
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('[data-payment-credit]')).toHaveText('Crédito • até 6x com juros');
   await expect(page.locator('#payment-help')).toContainText('Confirme as condições com a equipe.');
   for (const method of ['pix','credito','debito']) {
@@ -716,7 +716,7 @@ test('erro de leitura no painel oculta o formulário e permite recarregar', asyn
 
 test('sem configurações a vitrine não oferece métodos desconhecidos e mantém o WhatsApp', async ({page}) => {
   const {errors} = await setup(page,{failPayments:true});
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('[data-payment-status]')).toContainText('Não foi possível consultar');
   await expect(page.locator('.payment-option:visible')).toHaveCount(0);
   await expect(page.locator('#payment-help')).not.toContainText('3x');
@@ -730,7 +730,7 @@ test('sem configurações a vitrine não oferece métodos desconhecidos e manté
 test('textos administrativos são texto puro; resposta inválida não reativa métodos', async ({page}) => {
   const injection = '<img src=x onerror="window.__injected=true">';
   const {state, errors} = await setup(page,{payments:{pix_texto:injection}});
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('[data-payment-text="pix"]')).toContainText(injection);
   await expect(page.locator('[data-payment-text="pix"] img')).toHaveCount(0);
   expect(await page.evaluate(() => window.__injected)).toBeUndefined();
@@ -742,7 +742,7 @@ test('textos administrativos são texto puro; resposta inválida não reativa m�
 
 test('entregas indisponíveis continuam bloqueando o pedido', async ({page}) => {
   const {errors} = await setup(page,{failDelivery:true});
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('#checkout')).toBeDisabled();
   expect(await page.evaluate(() => window.__opened.length)).toBe(0);
   expect(errors).toEqual([]);
@@ -768,7 +768,7 @@ for (let mask=0; mask<8; mask++) {
     const payments = Object.fromEntries(methods.map(method => [method+'_ativo',active.includes(method)]));
     const {errors} = await setup(page,{payments});
     await page.setViewportSize({width:390,height:844});
-    await page.goto('/'); await addToCart(page);
+    await page.goto('/catalogo.html'); await addToCart(page);
     await expect(page.locator('.payment-option:visible')).toHaveCount(active.length);
     await page.locator('input[name="entrega"][value="retirada"]').check();
     for (const method of methods) {
@@ -825,7 +825,7 @@ test('administradora escolhe os métodos, salva, recarrega e vê somente os habi
   await expect(page.locator('#pag-credito_ativo')).not.toBeChecked();
   await expect(page.locator('#pag-debito_ativo')).not.toBeChecked();
   await page.locator('#pag-form > fieldset').first().screenshot({path:testInfo.outputPath('pagamentos-selecao.png')});
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('.payment-option:visible')).toHaveCount(1);
   await expect(page.locator('input[value="pix"]')).toBeVisible();
   await expect(page.locator('#payment-help')).not.toContainText('3x');
@@ -837,7 +837,7 @@ test('administradora escolhe os métodos, salva, recarrega e vê somente os habi
   expect(state.payments.credito_ativo).toBe(false);
   await page.locator('#pag-save').click();
   await expect(page.locator('#pag-status')).toContainText('Condições salvas');
-  await page.goto('/'); await addToCart(page);
+  await page.goto('/catalogo.html'); await addToCart(page);
   await expect(page.locator('.payment-option:visible')).toHaveCount(3);
   expect(errors).toEqual([]);
 });
