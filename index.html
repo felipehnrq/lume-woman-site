@@ -10,9 +10,10 @@
   <title>Lume Woman | Moda feminina</title>
   <!-- Cores iniciais já fazem parte do CSS. Evita tema antigo do navegador antes da consulta. -->
   <link rel="stylesheet" href="styles.css"/>
+  <style>.lume-home #colecao .collection-tools,.lume-home #colecao #results-count{display:none}.lume-home .collection-all-link{text-align:center;margin:42px 0 0}.lume-home .collection-all-link .btn-outline{display:inline-flex;align-items:center;justify-content:center;min-height:48px}</style>
   <link rel="stylesheet" href="marca.css"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allura&amp;display=swap" media="print" onload="this.media='all'"/>
 </head>
-<body>
+<body class="lume-home">
   <a class="skip-link" href="#colecao">Ir para a coleção</a>
   <div class="demo-alert"><span class="sparkle">✳</span> AMBIENTE DE TESTES <span class="bullet">•</span> Catálogo vinculado ao Supabase <span class="bullet">•</span> WhatsApp de testes habilitado</div>
   <div class="announcement">Seja bem-vinda à sua nova forma de escolher <span>♡</span> <span class="announcement-alt" id="tema-chamada">Uma marca que celebra a mulher e sua individualidade através de uma moda elegante, moderna e versátil.</span></div>
@@ -54,6 +55,7 @@
       <p id="results-count" class="results-count" aria-live="polite"></p>
       <div id="products" class="product-grid"></div>
       <p class="catalog-note" id="availability-status" role="status">Disponibilidade por tamanho sujeita à confirmação da loja. O carrinho não reserva peças.</p>
+      <div class="collection-all-link"><a href="catalogo.html" class="btn-outline">Conheça toda a coleção <span aria-hidden="true">↗</span></a></div>
       <div class="collection-footer"><p>Encontrou o seu estilo? Monte seu carrinho e converse com a loja para confirmar disponibilidade e entrega.</p><button type="button" class="btn-outline" id="collection-cart">Ver meu carrinho <span aria-hidden="true">↗</span></button></div>
     </section>
     <section id="depoimentos" class="social-section page-width" hidden><div class="section-heading"><div><p class="eyebrow">EXPERIÊNCIAS REAIS</p><h2>Quem veste Lume, compartilha</h2></div></div><div id="tema-depoimentos" class="social-grid"></div></section>
